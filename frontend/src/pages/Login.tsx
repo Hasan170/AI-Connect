@@ -1,18 +1,58 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, UserPlus, Mail, Lock, ArrowRight, ArrowLeft } from 'lucide-react';
+import api from '/Users/hasankamal/Documents/Projects/ai_connect/frontend/src/api.tsx'; // Import the Axios instance
 
 const Login = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [userType, setUserType] = useState<'student' | 'tutor' | null>(null);
+  const [email, setEmail] = useState(''); // State for email
+  const [password, setPassword] = useState(''); // State for password
+  const [name, setName] = useState('');
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (userType === 'student') {
-      navigate('/student-profile');
-    } else if (userType === 'tutor') {
-      navigate('/tutor-profile');
+
+    try {
+      if (isLogin) {
+        // Login logic
+        const endpoint = userType === 'student' ? '/student/login' : '/teacher/login';
+        const response = await api.post(endpoint, { email, password });
+
+        if (response.data.message === 'Student logged in successfully' || response.data.message === 'Teacher logged in successfully') {
+          // Navigate to the respective profile page
+          if (userType === 'student') {
+            localStorage.setItem('studentEmail', email); // Save the email in localStorage
+            navigate('/student-profile');
+          } else if (userType === 'tutor') {
+            navigate('/tutor-profile');
+            console.log("login success", {email});
+          }
+        } else {
+          alert('Invalid email or password');
+        }
+      } else {
+        // Signup logic
+        const endpoint = userType === 'student' ? '/student/signup' : '/teacher/signup';
+        const response = await api.post(endpoint, { name, email, password });
+
+        if (response.data.message === 'Student signed up successfully' || response.data.message === 'Teacher signed up successfully') {
+          // Navigate to the respective profile page
+          if (userType === 'student') {
+            navigate('/student-profile');
+            console.log("signup success", {email});
+          } else if (userType === 'tutor') {
+            navigate('/tutor-profile');
+            console.log("signup success", {email});
+          }
+        } else {
+          alert('Signup failed. Please try again.');
+        }
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('An error occurred. Please try again.');
     }
   };
 
@@ -99,6 +139,8 @@ const Login = () => {
                         className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-opacity-50"
                         placeholder="Enter your name"
                         required
+                        value={name} // Set the value of the input field to the name state
+                        onChange={(e) => setName(e.target.value)} // Update the name state on change
                       />
                     </div>
                   </div>
@@ -112,6 +154,8 @@ const Login = () => {
                       className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-opacity-50"
                       placeholder="Enter your email"
                       required
+                      value={email} // Set the value of the input field to the email state
+                      onChange={(e) => setEmail(e.target.value)} // Update the email state on change
                     />
                   </div>
                 </div>
@@ -124,6 +168,8 @@ const Login = () => {
                       className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-opacity-50"
                       placeholder="Enter your password"
                       required
+                      value={password} // Set the value of the input field to the password state
+                      onChange={(e) => setPassword(e.target.value)} // Update the password state on change
                     />
                   </div>
                 </div>

@@ -1,4 +1,6 @@
+const { get } = require('http');
 const StudentCredentials = require('../models/StudentCredentials');
+const StudentDetails = require('../models/StudentDetails');
 
 // Signup for students
 const signupStudent = async (req, res) => {
@@ -27,4 +29,19 @@ const loginStudent = async (req, res) => {
   }
 };
 
-module.exports = { signupStudent, loginStudent };
+// Fetch student details by email
+const getStudentDetails = async (req, res) => {
+  const { email } = req.params; // Get the email from the URL parameter
+  try {
+    const student = await StudentDetails.findOne({ email }); // Find the student by email
+    if (student) {
+      res.status(200).json(student); // Return the student details
+    } else {
+      res.status(404).json({ error: 'Student not found' });
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};  
+
+module.exports = { signupStudent, loginStudent, getStudentDetails };

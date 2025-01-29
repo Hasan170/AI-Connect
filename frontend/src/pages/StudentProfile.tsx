@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react'; // Add useEffect here
 import { Line } from 'react-chartjs-2';
 import { Edit, Bell, Book, Calendar, X, CheckCircle, Clock, User } from 'lucide-react';
+import { useNavigate } from 'react-router-dom'; // Add useNavigate
+import api from '/Users/hasankamal/Documents/Projects/ai_connect/frontend/src/api.tsx'; // Add api
 
 interface ProfileData {
   name: string;
@@ -19,11 +21,46 @@ interface ClassData {
 const StudentProfile = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [profileData, setProfileData] = useState<ProfileData>({
-    name: 'Isra',
-    grade: '10th Grade',
-    schoolBoard: 'CBSE',
-    dob: '2000-01-01',
+    name: '',
+    grade: '',
+    schoolBoard: '',
+    dob: '',
   });
+
+  const [subjects, setSubjects] = useState<string[]>([]); // State for subjects
+  const navigate = useNavigate(); // Initialize navigate
+
+  // Fetch student details on page load
+  useEffect(() => {
+    const fetchStudentDetails = async () => {
+      try {
+        // Get the student's email from localStorage (assuming you saved it during login)
+        const email = localStorage.getItem('studentEmail');
+        if (!email) {
+          navigate('/login'); // Redirect to login if email is not found
+          return;
+        }
+
+        // Fetch student details from the backend
+        const response = await api.get(`/student/details/${email}`);
+        const student = response.data;
+
+        // Update the state with the fetched data
+        setProfileData({
+          name: student.name,
+          grade: student.grade,
+          schoolBoard: student.schoolBoard,
+          dob: student.dateOfBirth,
+        });
+        setSubjects(student.subjects.split(', ')); // Convert subjects string to array
+      } catch (error) {
+        console.error('Error fetching student details:', error);
+        alert('Failed to fetch student details. Please try again.');
+      }
+    };
+
+    fetchStudentDetails();
+  }, [navigate]);
 
   const chartData = {
     labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
