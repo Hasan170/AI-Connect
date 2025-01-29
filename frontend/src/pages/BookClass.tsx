@@ -2,18 +2,22 @@ import React, { useState } from 'react';
 import { Calendar, Clock, BookOpen, ArrowRight, CheckCircle } from 'lucide-react';
 
 const BookClass = () => {
-  const [selectedSubject, setSelectedSubject] = useState('');
-  const [selectedDate, setSelectedDate] = useState('');
-  const [selectedTime, setSelectedTime] = useState('');
+  const [formData, setFormData] = useState({
+    fullName: '',
+    email: '',
+    grade: '',
+    subject: '',
+    date: ''
+  });
 
   const subjects = [
     'Mathematics', 'Physics', 'Chemistry', 'Biology',
     'English Literature', 'History', 'Computer Science'
   ];
 
-  const timeSlots = [
-    '09:00 AM', '10:00 AM', '11:00 AM', '02:00 PM',
-    '03:00 PM', '04:00 PM', '05:00 PM'
+  const grades = [
+    '6th Grade', '7th Grade', '8th Grade', '9th Grade',
+    '10th Grade', '11th Grade', '12th Grade'
   ];
 
   const features = [
@@ -33,6 +37,38 @@ const BookClass = () => {
       description: "100% satisfaction guarantee"
     }
   ];
+
+  const steps = [
+    {
+      icon: <Calendar className="w-6 h-6 text-navbar" />,
+      title: "Step 1: Choose Your Class",
+      description: "Select the subject and grade you want to book a class for."
+    },
+    {
+      icon: <Clock className="w-6 h-6 text-navbar" />,
+      title: "Step 2: Pick a Date",
+      description: "Choose a date that fits your schedule."
+    },
+    {
+      icon: <ArrowRight className="w-6 h-6 text-navbar" />,
+      title: "Step 3: Book Your Session",
+      description: "Fill in your details and book your class."
+    }
+  ];
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log('Form submitted:', formData);
+    // Add your API call here
+  };
 
   return (
     <div className="pt-24 px-6 bg-background min-h-screen">
@@ -65,27 +101,85 @@ const BookClass = () => {
               </div>
             </div>
 
+            {/* How It Works Section */}
             <div className="bg-white p-6 rounded-lg shadow-md transform hover:scale-[1.02] transition-all duration-300">
-              <h3 className="text-xl font-semibold mb-4 text-text-primary">Our Guarantee</h3>
-              <p className="text-text-secondary">
-                If you're not satisfied with your first class, we'll give you a full refund
-                or match you with another tutor at no additional cost.
-              </p>
+              <h2 className="text-2xl font-semibold mb-6 text-text-primary">How It Works</h2>
+              <div className="space-y-6">
+                {steps.map((step, index) => (
+                  <div key={index} className="flex items-start gap-4">
+                    <div className="flex-shrink-0">{step.icon}</div>
+                    <div>
+                      <h3 className="font-semibold text-text-primary">{step.title}</h3>
+                      <p className="text-text-secondary">{step.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
-          {/* Booking Form */}
-          <div className="bg-white p-8 rounded-lg shadow-lg transform hover:scale-[1.02] transition-all duration-300">
+          {/* Booking Form Section */}
+          <div className="bg-white p-6 rounded-lg shadow-md">
             <h2 className="text-2xl font-semibold mb-6 text-text-primary">Book Your Session</h2>
-            
-            <form className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-text-primary mb-1">
+                  Full Name
+                </label>
+                <input
+                  type="text"
+                  name="fullName"
+                  value={formData.fullName}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2 border border-card rounded-lg focus:outline-none focus:ring-2 focus:ring-navbar focus:border-transparent transition-all duration-300"
+                  placeholder="Enter your full name"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-text-primary mb-1">
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2 border border-card rounded-lg focus:outline-none focus:ring-2 focus:ring-navbar focus:border-transparent transition-all duration-300"
+                  placeholder="Enter your email address"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-text-primary mb-1">
+                  Grade/Class
+                </label>
+                <select
+                  name="grade"
+                  value={formData.grade}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2 border border-card rounded-lg focus:outline-none focus:ring-2 focus:ring-navbar focus:border-transparent transition-all duration-300"
+                  required
+                >
+                  <option value="">Select your grade</option>
+                  {grades.map((grade) => (
+                    <option key={grade} value={grade}>
+                      {grade}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-text-primary mb-1">
                   Subject
                 </label>
                 <select
-                  value={selectedSubject}
-                  onChange={(e) => setSelectedSubject(e.target.value)}
+                  name="subject"
+                  value={formData.subject}
+                  onChange={handleInputChange}
                   className="w-full px-4 py-2 border border-card rounded-lg focus:outline-none focus:ring-2 focus:ring-navbar focus:border-transparent transition-all duration-300"
                   required
                 >
@@ -100,53 +194,23 @@ const BookClass = () => {
 
               <div>
                 <label className="block text-sm font-medium text-text-primary mb-1">
-                  Date
+                  Preferred Date
                 </label>
                 <input
                   type="date"
-                  value={selectedDate}
-                  onChange={(e) => setSelectedDate(e.target.value)}
+                  name="date"
+                  value={formData.date}
+                  onChange={handleInputChange}
                   className="w-full px-4 py-2 border border-card rounded-lg focus:outline-none focus:ring-2 focus:ring-navbar focus:border-transparent transition-all duration-300"
                   required
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-text-primary mb-1">
-                  Time Slot
-                </label>
-                <select
-                  value={selectedTime}
-                  onChange={(e) => setSelectedTime(e.target.value)}
-                  className="w-full px-4 py-2 border border-card rounded-lg focus:outline-none focus:ring-2 focus:ring-navbar focus:border-transparent transition-all duration-300"
-                  required
-                >
-                  <option value="">Select a time slot</option>
-                  {timeSlots.map((time) => (
-                    <option key={time} value={time}>
-                      {time}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-text-primary mb-1">
-                  Additional Notes
-                </label>
-                <textarea
-                  rows={4}
-                  className="w-full px-4 py-2 border border-card rounded-lg focus:outline-none focus:ring-2 focus:ring-navbar focus:border-transparent transition-all duration-300"
-                  placeholder="Tell us about your learning goals..."
-                ></textarea>
-              </div>
-
               <button
                 type="submit"
-                className="group w-full bg-navbar text-white py-3 rounded-lg hover:bg-footer transition-all duration-300 transform hover:scale-[1.02] flex items-center justify-center gap-2"
+                className="w-full bg-navbar text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition-all duration-300"
               >
-                Book Now
-                <ArrowRight className="group-hover:translate-x-1 transition-transform" />
+                Book Class
               </button>
             </form>
           </div>
