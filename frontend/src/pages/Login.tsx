@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, UserPlus, Mail, Lock, ArrowRight, ArrowLeft } from 'lucide-react';
-import api from '/Users/hasankamal/Documents/Projects/ai_connect/frontend/src/api.tsx'; // Import the Axios instance
+import api from '../api.tsx'; // Import the Axios instance
 
 const Login = () => {
   const [isLogin, setIsLogin] = useState(true);
-  const [userType, setUserType] = useState<'student' | 'tutor' | null>(null);
+  const [userType, setUserType] = useState<'student' | 'tutor' | 'admin' | null>(null);
   const [email, setEmail] = useState(''); // State for email
   const [password, setPassword] = useState(''); // State for password
   const [name, setName] = useState('');
@@ -17,20 +17,23 @@ const Login = () => {
     try {
       if (isLogin) {
         // Login logic
-        const endpoint = userType === 'student' ? '/student/login' : '/teacher/login';
-        const response = await api.post(endpoint, { email, password });
-
-        if (response.data.message === 'Student logged in successfully' || response.data.message === 'Teacher logged in successfully') {
-          // Navigate to the respective profile page
-          if (userType === 'student') {
-            localStorage.setItem('studentEmail', email); // Save the email in localStorage
-            navigate('/student-profile');
-          } else if (userType === 'tutor') {
-            navigate('/tutor-profile');
-            console.log("login success", {email});
-          }
+        if (userType === 'admin') {
+          navigate('/admin-dashboard');
         } else {
-          alert('Invalid email or password');
+          const endpoint = userType === 'student' ? '/student/login' : '/teacher/login';
+          const response = await api.post(endpoint, { email, password });
+
+          if (response.data.message === 'Student logged in successfully' || response.data.message === 'Teacher logged in successfully') {
+            // Navigate to the respective profile page
+            if (userType === 'student') {
+              localStorage.setItem('studentEmail', email); // Save the email in localStorage
+              navigate('/student-profile');
+            } else if (userType === 'tutor') {
+              navigate('/tutor-profile');
+            }
+          } else {
+            alert('Invalid email or password');
+          }
         }
       } else {
         // Signup logic
@@ -41,10 +44,8 @@ const Login = () => {
           // Navigate to the respective profile page
           if (userType === 'student') {
             navigate('/student-profile');
-            console.log("signup success", {email});
           } else if (userType === 'tutor') {
             navigate('/tutor-profile');
-            console.log("signup success", {email});
           }
         } else {
           alert('Signup failed. Please try again.');
@@ -82,6 +83,13 @@ const Login = () => {
                   <UserPlus size={20} />
                   Tutor
                 </button>
+                <button
+                  className="px-6 py-3 rounded-lg flex items-center gap-2 transform hover:scale-105 transition-all duration-300 bg-gray-600 text-white hover:bg-opacity-90"
+                  onClick={() => setUserType('admin')}
+                >
+                  <User size={20} />
+                  Admin
+                </button>
               </div>
             </>
           ) : (
@@ -95,7 +103,7 @@ const Login = () => {
                   Back
                 </button>
                 <h2 className="text-2xl font-bold text-center flex-1">
-                  {userType === 'student' ? 'Student' : 'Tutor'} {isLogin ? 'Login' : 'Sign Up'}
+                  {userType === 'student' ? 'Student' : userType === 'tutor' ? 'Tutor' : 'Admin'} {isLogin ? 'Login' : 'Sign Up'}
                 </h2>
               </div>
 
@@ -105,7 +113,9 @@ const Login = () => {
                     isLogin
                       ? userType === 'student' 
                         ? 'border-b-2 border-navbar text-navbar' 
-                        : 'border-b-2 border-footer text-footer'
+                        : userType === 'tutor'
+                        ? 'border-b-2 border-footer text-footer'
+                        : 'border-b-2 border-gray-600 text-gray-600'
                       : 'text-gray-400'
                   }`}
                   onClick={() => setIsLogin(true)}
@@ -117,7 +127,9 @@ const Login = () => {
                     !isLogin
                       ? userType === 'student' 
                         ? 'border-b-2 border-navbar text-navbar' 
-                        : 'border-b-2 border-footer text-footer'
+                        : userType === 'tutor'
+                        ? 'border-b-2 border-footer text-footer'
+                        : 'border-b-2 border-gray-600 text-gray-600'
                       : 'text-gray-400'
                   }`}
                   onClick={() => setIsLogin(false)}
@@ -127,7 +139,7 @@ const Login = () => {
               </div>
 
               <form onSubmit={handleSubmit} className={`mb-8 p-6 rounded-lg shadow-lg ${
-                userType === 'student' ? 'bg-navbar' : 'bg-footer'
+                userType === 'student' ? 'bg-navbar' : userType === 'tutor' ? 'bg-footer' : 'bg-gray-600'
               }`}>
                 {!isLogin && (
                   <div className="mb-4">
@@ -190,7 +202,7 @@ const Login = () => {
                 <button
                   type="submit"
                   className="w-full py-3 bg-white rounded-lg hover:bg-gray-50 transition-all duration-300 flex items-center justify-center gap-2 font-semibold transform hover:scale-[1.02]"
-                  style={{ color: userType === 'student' ? '#245F73' : '#733E24' }}
+                  style={{ color: userType === 'student' ? '#245F73' : userType === 'tutor' ? '#733E24' : '#4B5563' }}
                 >
                   {isLogin ? 'Login' : 'Sign Up'} 
                   <ArrowRight size={20} />

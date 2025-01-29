@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Edit, Star, Users, DollarSign, Clock, Book, X } from 'lucide-react';
+import api from '../api';
+import ScheduleClassModal from '../components/ScheduleClassModal';
 
 interface ProfileData {
   name: string;
@@ -10,13 +12,16 @@ interface ProfileData {
 
 const TutorProfile = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(1800); // 30 minutes in seconds
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+  const [isRescheduleModalOpen, setIsRescheduleModalOpen] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(1800); 
   const [profileData, setProfileData] = useState<ProfileData>({
     name: 'Dr. Smith',
     expertise: ['Physics', 'Mathematics'],
     teachingHours: '250+ hours',
     rating: 4.8
   });
+  const [rescheduleClass, setRescheduleClass] = useState<{ id: string; date: string; time: string } | null>(null);
 
   // Timer effect
   useEffect(() => {
@@ -37,6 +42,11 @@ const TutorProfile = () => {
   const handleEditSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsEditModalOpen(false);
+  };
+
+  const openRescheduleModal = (classId: string, currentDate: string, currentTime: string) => {
+    setRescheduleClass({ id: classId, date: currentDate, time: currentTime });
+    setIsRescheduleModalOpen(true);
   };
 
   return (
@@ -127,15 +137,18 @@ const TutorProfile = () => {
         <div className="bg-white p-6 rounded-lg shadow-md mb-6 transform hover:scale-[1.01] transition-all duration-300">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-semibold text-text-primary">Class Schedule</h2>
-            <button className="bg-navbar text-white px-4 py-2 rounded-lg hover:bg-button-secondary transition-colors transform hover:scale-[1.05]">
+            <button
+              onClick={() => setIsScheduleModalOpen(true)}
+              className="bg-navbar text-white px-4 py-2 rounded-lg hover:bg-button-secondary transition-colors transform hover:scale-[1.05]"
+            >
               Schedule Class
             </button>
           </div>
           <div className="grid md:grid-cols-3 gap-4">
             {[
-              { time: '10:00 AM', subject: 'Physics', student: 'John Doe' },
-              { time: '2:00 PM', subject: 'Mathematics', student: 'Jane Smith' },
-              { time: '4:00 PM', subject: 'Physics', student: 'Mike Johnson' },
+              { id: '1', time: '10:00 AM', subject: 'Physics', student: 'John Doe', date: '2023-10-01' },
+              { id: '2', time: '2:00 PM', subject: 'Mathematics', student: 'Jane Smith', date: '2023-10-01' },
+              { id: '3', time: '4:00 PM', subject: 'Physics', student: 'Mike Johnson', date: '2023-10-01' },
             ].map((class_, index) => (
               <div key={index} className="p-4 bg-background rounded-lg transform hover:scale-[1.02] transition-all duration-300">
                 <div className="flex justify-between items-start mb-3">
@@ -150,7 +163,10 @@ const TutorProfile = () => {
                   <button className="flex-1 bg-navbar text-white py-2 rounded-lg hover:bg-button-secondary transition-colors transform hover:scale-[1.05]">
                     Start
                   </button>
-                  <button className="flex-1 bg-card text-text-primary py-2 rounded-lg hover:bg-gray-300 transition-colors transform hover:scale-[1.05]">
+                  <button
+                    className="flex-1 bg-card text-text-primary py-2 rounded-lg hover:bg-gray-300 transition-colors transform hover:scale-[1.05]"
+                    onClick={() => openRescheduleModal(class_.id, class_.date, class_.time)}
+                  >
                     Reschedule
                   </button>
                 </div>
@@ -237,13 +253,29 @@ const TutorProfile = () => {
               </div>
               <button
                 type="submit"
-                className="w-full bg-navbar text-white py-2 rounded-lg hover:bg-button-secondary transition-colors transform hover:scale-[1.02]"
+                className="w-full bg-navbar text-white py-2 rounded-lg hover:bg-button-secondary transition-colors"
               >
-                Save Changes
+                Save
               </button>
             </form>
           </div>
         </div>
+      )}
+
+      {/* Schedule Class Modal */}
+      <ScheduleClassModal
+        isOpen={isScheduleModalOpen}
+        onClose={() => setIsScheduleModalOpen(false)}
+      />
+
+      {/* Reschedule Class Modal */}
+      {rescheduleClass && (
+        <ScheduleClassModal
+          isOpen={isRescheduleModalOpen}
+          onClose={() => setIsRescheduleModalOpen(false)}
+          isReschedule={true}
+          rescheduleData={rescheduleClass}
+        />
       )}
     </div>
   );
