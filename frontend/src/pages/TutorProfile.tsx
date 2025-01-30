@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Edit, Star, Users, DollarSign, Clock, Book, X } from 'lucide-react';
-import api from '../api';
 import ScheduleClassModal from '../components/ScheduleClassModal';
+import { useNavigate } from 'react-router-dom';
+import api from '../api'; 
 
 interface ProfileData {
   name: string;
@@ -11,6 +12,7 @@ interface ProfileData {
 }
 
 const TutorProfile = () => {
+  const navigate = useNavigate();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [isRescheduleModalOpen, setIsRescheduleModalOpen] = useState(false);
@@ -23,15 +25,34 @@ const TutorProfile = () => {
   });
   const [rescheduleClass, setRescheduleClass] = useState<{ id: string; date: string; time: string } | null>(null);
 
-  // Timer effect
   useEffect(() => {
-    if (timeLeft > 0) {
-      const timer = setInterval(() => {
-        setTimeLeft(time => time - 1);
-      }, 1000);
-      return () => clearInterval(timer);
-    }
-  }, [timeLeft]);
+    const fetchTeacherData = async () => {
+      try {
+        const email = localStorage.getItem('teacherEmail'); // Get email from localStorage
+        if (!email) {
+          navigate('/login'); // Redirect if no email
+          return;
+        }
+  
+        // Fetch teacher data from the backend
+        const response = await api.get(`/api/teacher/profile/${email}`);
+        const teacher = response.data;
+  
+        // Update state with fetched data
+        setProfileData({
+          name: teacher.name,
+          expertise: teacher.expertise.split(', '), // Convert string to array
+          teachingHours: `${teacher.teachingHours}+ hours`, // Format as string
+          rating: teacher.rating,
+        });
+      } catch (error) {
+        console.error('Error fetching teacher data:', error);
+        alert('Failed to load profile data');
+      }
+    };
+  
+    fetchTeacherData();
+  }, [navigate]);
 
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
