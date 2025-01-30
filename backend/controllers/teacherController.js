@@ -1,4 +1,5 @@
 const TeacherCredentials = require('../models/TeacherCredentials');
+const TeacherDetails = require('../models/TeacherDetails');
 
 // Signup for teachers
 const signupTeacher = async (req, res) => {
@@ -27,4 +28,19 @@ const loginTeacher = async (req, res) => {
   }
 };
 
-module.exports = { signupTeacher, loginTeacher };
+// Fetch teacher details by email
+const getTeacherDetails = async (req, res) => {
+  const { email } = req.params; // Get the email from the URL parameter
+  try {
+    const teacher = await TeacherDetails.findOne({ email }); // Find the teacher by email
+    if (teacher) {
+      res.status(200).json(teacher); // Return the teacher details
+    } else {
+      res.status(404).json({ error: 'Teacher not found' });
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};  
+
+module.exports = { signupTeacher, loginTeacher, getTeacherDetails };

@@ -29,6 +29,7 @@ const Login = () => {
               localStorage.setItem('studentEmail', email); // Save the email in localStorage
               navigate('/student-profile');
             } else if (userType === 'tutor') {
+              localStorage.setItem('teacherEmail', email); // Save email in localStorage
               navigate('/tutor-profile');
             }
           } else {
