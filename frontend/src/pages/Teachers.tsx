@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Search, Filter } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
+import GenerateTeacherCredentialsModal from '../components/GenerateTeacherCredentialsModal';
 
 interface TeacherApplication {
   id: string;
@@ -15,6 +16,8 @@ interface TeacherApplication {
 const Teachers = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterSubject, setFilterSubject] = useState('all');
+  const [selectedTeacher, setSelectedTeacher] = useState<TeacherApplication | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Dummy data from become a tutor form submissions
   const [teachers] = useState<TeacherApplication[]>([
@@ -56,6 +59,11 @@ const Teachers = () => {
   });
 
   const subjects = [...new Set(teachers.map(teacher => teacher.subject))];
+
+  const handleGenerateCredentials = (teacher: TeacherApplication) => {
+    setSelectedTeacher(teacher);
+    setIsModalOpen(true);
+  };
 
   return (
     <div className="flex">
@@ -125,6 +133,9 @@ const Teachers = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Application Date
                     </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -133,13 +144,21 @@ const Teachers = () => {
                       <td className="px-6 py-4 whitespace-nowrap">{teacher.fullName}</td>
                       <td className="px-6 py-4 whitespace-nowrap">{teacher.email}</td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
+                        <span className="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
                           {teacher.subject}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">{teacher.experience}</td>
                       <td className="px-6 py-4 whitespace-nowrap">{teacher.qualification}</td>
                       <td className="px-6 py-4 whitespace-nowrap">{teacher.applicationDate}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <button
+                          onClick={() => handleGenerateCredentials(teacher)}
+                          className="text-navbar hover:text-opacity-80"
+                        >
+                          Generate Credentials
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -148,6 +167,11 @@ const Teachers = () => {
           </div>
         </div>
       </div>
+      <GenerateTeacherCredentialsModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        teacher={selectedTeacher}
+      />
     </div>
   );
 };
