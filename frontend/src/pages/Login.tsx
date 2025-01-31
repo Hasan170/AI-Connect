@@ -1,61 +1,52 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, UserPlus, Mail, Lock, ArrowRight, ArrowLeft } from 'lucide-react';
-import api from '../api.tsx'; // Import the Axios instance
+import api from '../api';
 
 const Login = () => {
-  const [isLogin, setIsLogin] = useState(true);
   const [userType, setUserType] = useState<'student' | 'tutor' | 'admin' | null>(null);
-  const [email, setEmail] = useState(''); // State for email
-  const [password, setPassword] = useState(''); // State for password
-  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
-      if (isLogin) {
-        // Login logic
-        if (userType === 'admin') {
+      if (userType === 'admin') {
+        // Hardcoded admin credentials for demo
+        if (email === 'admin@aiconnect.com' && password === 'admin123') {
+          localStorage.setItem('adminEmail', email);
           navigate('/admin-dashboard');
         } else {
-          const endpoint = userType === 'student' ? '/student/login' : '/teacher/login';
-          const response = await api.post(endpoint, { email, password });
-
-          if (response.data.message === 'Student logged in successfully' || response.data.message === 'Teacher logged in successfully') {
-            // Navigate to the respective profile page
-            if (userType === 'student') {
-              localStorage.setItem('studentEmail', email); // Save the email in localStorage
-              navigate('/student-profile');
-            } else if (userType === 'tutor') {
-              localStorage.setItem('teacherEmail', email); // Save email in localStorage
-              navigate('/tutor-profile');
-            }
-          } else {
-            alert('Invalid email or password');
-          }
+          alert('Invalid admin credentials');
         }
       } else {
-        // Signup logic
-        const endpoint = userType === 'student' ? '/student/signup' : '/teacher/signup';
-        const response = await api.post(endpoint, { name, email, password });
+        const endpoint = userType === 'student' ? '/student/login' : '/teacher/login';
+        const response = await api.post(endpoint, { email, password });
 
-        if (response.data.message === 'Student signed up successfully' || response.data.message === 'Teacher signed up successfully') {
-          // Navigate to the respective profile page
+        if (response.data.message === 'Student logged in successfully' || 
+            response.data.message === 'Teacher logged in successfully') {
           if (userType === 'student') {
+            localStorage.setItem('studentEmail', email);
             navigate('/student-profile');
           } else if (userType === 'tutor') {
+            localStorage.setItem('teacherEmail', email);
             navigate('/tutor-profile');
           }
         } else {
-          alert('Signup failed. Please try again.');
+          alert('Invalid email or password');
         }
       }
     } catch (error) {
-      console.error('Error:', error);
-      alert('An error occurred. Please try again.');
+      console.error('Login error:', error);
+      alert('Login failed. Please try again.');
     }
+  };
+
+  const handleGoogleLogin = () => {
+    // Implement Google OAuth login
+    console.log('Google login clicked');
   };
 
   return (
@@ -67,7 +58,7 @@ const Login = () => {
               <h1 className="text-4xl font-bold mb-6 text-center bg-gradient-to-r from-navbar to-footer bg-clip-text text-transparent">
                 Welcome to AI Connect
               </h1>
-              <p className="text-lg mb-8 text-text-primary text-center">Choose your journey</p>
+              <p className="text-lg mb-8 text-text-primary text-center">Choose your role to login</p>
               
               <div className="flex justify-center gap-4">
                 <button
@@ -104,60 +95,13 @@ const Login = () => {
                   Back
                 </button>
                 <h2 className="text-2xl font-bold text-center flex-1">
-                  {userType === 'student' ? 'Student' : userType === 'tutor' ? 'Tutor' : 'Admin'} {isLogin ? 'Login' : 'Sign Up'}
+                  {userType === 'student' ? 'Student' : userType === 'tutor' ? 'Tutor' : 'Admin'} Login
                 </h2>
-              </div>
-
-              <div className="flex border-b-2 mb-8">
-                <button
-                  className={`flex-1 py-3 text-center font-semibold transition-all duration-300 ${
-                    isLogin
-                      ? userType === 'student' 
-                        ? 'border-b-2 border-navbar text-navbar' 
-                        : userType === 'tutor'
-                        ? 'border-b-2 border-footer text-footer'
-                        : 'border-b-2 border-gray-600 text-gray-600'
-                      : 'text-gray-400'
-                  }`}
-                  onClick={() => setIsLogin(true)}
-                >
-                  Login
-                </button>
-                <button
-                  className={`flex-1 py-3 text-center font-semibold transition-all duration-300 ${
-                    !isLogin
-                      ? userType === 'student' 
-                        ? 'border-b-2 border-navbar text-navbar' 
-                        : userType === 'tutor'
-                        ? 'border-b-2 border-footer text-footer'
-                        : 'border-b-2 border-gray-600 text-gray-600'
-                      : 'text-gray-400'
-                  }`}
-                  onClick={() => setIsLogin(false)}
-                >
-                  Sign Up
-                </button>
               </div>
 
               <form onSubmit={handleSubmit} className={`mb-8 p-6 rounded-lg shadow-lg ${
                 userType === 'student' ? 'bg-navbar' : userType === 'tutor' ? 'bg-footer' : 'bg-gray-600'
               }`}>
-                {!isLogin && (
-                  <div className="mb-4">
-                    <label className="block text-left mb-2 text-white font-medium">Name</label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-3 text-gray-400" size={20} />
-                      <input
-                        type="text"
-                        className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-opacity-50"
-                        placeholder="Enter your name"
-                        required
-                        value={name} // Set the value of the input field to the name state
-                        onChange={(e) => setName(e.target.value)} // Update the name state on change
-                      />
-                    </div>
-                  </div>
-                )}
                 <div className="mb-4">
                   <label className="block text-left mb-2 text-white font-medium">Email</label>
                   <div className="relative">
@@ -167,8 +111,8 @@ const Login = () => {
                       className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-opacity-50"
                       placeholder="Enter your email"
                       required
-                      value={email} // Set the value of the input field to the email state
-                      onChange={(e) => setEmail(e.target.value)} // Update the email state on change
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
                     />
                   </div>
                 </div>
@@ -181,38 +125,27 @@ const Login = () => {
                       className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-opacity-50"
                       placeholder="Enter your password"
                       required
-                      value={password} // Set the value of the input field to the password state
-                      onChange={(e) => setPassword(e.target.value)} // Update the password state on change
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
                     />
                   </div>
                 </div>
-                {!isLogin && (
-                  <div className="mb-4">
-                    <label className="block text-left mb-2 text-white font-medium">Confirm Password</label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-3 text-gray-400" size={20} />
-                      <input
-                        type="password"
-                        className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-opacity-50"
-                        placeholder="Confirm your password"
-                        required
-                      />
-                    </div>
-                  </div>
-                )}
                 <button
                   type="submit"
                   className="w-full py-3 bg-white rounded-lg hover:bg-gray-50 transition-all duration-300 flex items-center justify-center gap-2 font-semibold transform hover:scale-[1.02]"
                   style={{ color: userType === 'student' ? '#245F73' : userType === 'tutor' ? '#733E24' : '#4B5563' }}
                 >
-                  {isLogin ? 'Login' : 'Sign Up'} 
+                  Login 
                   <ArrowRight size={20} />
                 </button>
               </form>
 
               <div className="text-center">
                 <p className="text-gray-600 mb-4">Or continue with</p>
-                <button className="w-full py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all duration-300 flex items-center justify-center gap-2 transform hover:scale-[1.02]">
+                <button 
+                  onClick={handleGoogleLogin}
+                  className="w-full py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all duration-300 flex items-center justify-center gap-2 transform hover:scale-[1.02]"
+                >
                   <svg className="w-5 h-5" viewBox="0 0 24 24">
                     <path
                       fill="currentColor"

@@ -14,11 +14,19 @@ import AdminDashboard from './pages/AdminDashboard';
 import Students from './pages/Students';
 import Teachers from './pages/Teachers';
 import Resources from './pages/Resources';
-
+import MyClasses from './pages/student/MyClasses';
+import Schedule from './pages/student/Schedule';
+import Assignments from './pages/student/Assignments';
+import TeachersPage from './pages/student/Teachers';
+import ResourcesPage from './pages/student/Resources';
+import FeeDetails from './pages/student/FeeDetails';
+import Feedback from './pages/student/Feedback';
 
 function App() {
   const location = useLocation();
-  const showFooter = !['/admin-dashboard', '/student-profile', '/tutor-profile', '/admin/students', '/admin/teachers', '/admin/resources', '/admin/settings'].includes(location.pathname);
+  const showFooter = !['/admin-dashboard', '/student-profile', '/tutor-profile', '/admin/students', '/admin/teachers', '/admin/resources', '/admin/settings', 
+    '/student/classes', '/student/schedule', '/student/assignments', '/student/teachers', '/student/resources', '/student/fee-details', '/student/feedback'
+  ].includes(location.pathname);
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -37,6 +45,14 @@ function App() {
           <Route path="/admin/students" element={<Students />} />
           <Route path="/admin/teachers" element={<Teachers />} />
           <Route path="/admin/resources" element={<Resources />} />
+          <Route path="/student/classes" element={<MyClasses />} />
+          <Route path="/student/schedule" element={<Schedule />} />
+          <Route path="/student/assignments" element={<Assignments />} />
+          <Route path="/student/teachers" element={<TeachersPage />}  />
+          <Route path="/student/resources" element={<ResourcesPage />} />
+          <Route path="/student/fee-details" element={<FeeDetails />} />
+          <Route path="/student/feedback" element={<Feedback />} /> 
+
         </Routes>
       </main>
       {showFooter && <Footer />}

@@ -7,7 +7,9 @@ const Navbar = () => {
   const location = useLocation();
 
 
-  const isProfilePage = ['/student-profile', '/tutor-profile', '/admin-dashboard',  '/admin/students', '/admin/teachers', '/admin/resources', '/admin/settings'].includes(location.pathname);
+  const isProfilePage = ['/student-profile', '/tutor-profile', '/admin-dashboard',  '/admin/students', '/admin/teachers', '/admin/resources', '/admin/settings'
+  ].includes(location.pathname) || ['/student/classes', '/student/schedule', '/student/assignments', '/student/teachers', '/student/resources', '/student/fee-details', '/student/feedback'
+  ].includes(location.pathname);
 
   const navItems = [
     { label: 'About Us', href: '/about' },
@@ -19,8 +21,13 @@ const Navbar = () => {
   return (
     <nav className="bg-navbar py-4 px-6 fixed w-full top-0 z-50 shadow-md">
       <div className="max-w-7xl mx-auto flex justify-between items-center">
-        <Link to="/" className="flex items-center">
-          <span className="text-2xl font-bold text-white">AI Connect</span>
+      <Link to="/" className="flex items-center space-x-2">
+          <img 
+            src="/aiclogo.png" 
+            alt="AI Connect Logo" 
+            className="h-10 w-auto"
+          />
+          <span className="text-2xl font-sans font-bold text-white">AI Connect</span>
         </Link>
         
         {/* Only show these items if not on profile pages */}
