@@ -2,7 +2,11 @@ import React from 'react';
 import { User, BookOpen, Calendar, ClipboardList, Users, FileText, DollarSign, MessageSquare, LogOut, Book } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
-const StudentSidebar = ({ onNotebookClick }) => {
+interface StudentSidebarProps {
+  onNotebookClick: () => void;
+}
+
+const StudentSidebar: React.FC<StudentSidebarProps> = ({ onNotebookClick }) => {
   const location = useLocation();
   const navigate = useNavigate();
 
