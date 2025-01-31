@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Search, Filter } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
+import GenerateCredentialsModal from '../components/GenerateCredentialsModal';
 
 interface StudentBooking {
   id: string;
@@ -14,6 +15,8 @@ interface StudentBooking {
 const Students = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterSubject, setFilterSubject] = useState('all');
+  const [selectedStudent, setSelectedStudent] = useState<StudentBooking | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Dummy data from book class form submissions
   const [students] = useState<StudentBooking[]>([
@@ -52,6 +55,11 @@ const Students = () => {
   });
 
   const subjects = [...new Set(students.map(student => student.subject))];
+
+  const handleGenerateCredentials = (student: StudentBooking) => {
+    setSelectedStudent(student);
+    setIsModalOpen(true);
+  };
 
   return (
     <div className="flex">
@@ -118,6 +126,9 @@ const Students = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Date
                     </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -132,6 +143,14 @@ const Students = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">{student.date}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <button
+                          onClick={() => handleGenerateCredentials(student)}
+                          className="text-navbar hover:text-opacity-80"
+                        >
+                          Generate Credentials
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -140,6 +159,11 @@ const Students = () => {
           </div>
         </div>
       </div>
+      <GenerateCredentialsModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        student={selectedStudent}
+      />
     </div>
   );
 };
