@@ -1,6 +1,6 @@
 import React from 'react';
 import { File, Video, Book, Download, Plus, Search, Filter } from 'lucide-react';
-import Sidebar from '../components/Sidebar';
+import Sidebar from '../../components/AdminSidebar';
 
 interface Resource {
   id: string;

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Users, BookOpen, DollarSign, Activity, Check, X } from 'lucide-react';
-import Sidebar from '../components/Sidebar';
+import Sidebar from '../components/AdminSidebar';
 
 interface ClassRequest {
   id: string;

@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
-const Sidebar = () => {
+const AdminSidebar = () => {
   const location = useLocation();
   const menuItems = [
     { title: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/admin-dashboard' },
@@ -48,4 +48,4 @@ const Sidebar = () => {
   );
 };
 
-export default Sidebar;
+export default AdminSidebar;
