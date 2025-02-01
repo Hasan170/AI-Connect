@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Search, Filter } from 'lucide-react';
-import Sidebar from '../components/Sidebar';
-import GenerateTeacherCredentialsModal from '../components/GenerateTeacherCredentialsModal';
+import Sidebar from '../../components/AdminSidebar';
+import GenerateTeacherCredentialsModal from '../../components/GenerateTeacherCredentialsModal';
 
 interface TeacherApplication {
   id: string;

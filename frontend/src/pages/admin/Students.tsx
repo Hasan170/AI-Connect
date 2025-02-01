@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Search, Filter } from 'lucide-react';
-import Sidebar from '../components/Sidebar';
-import GenerateCredentialsModal from '../components/GenerateCredentialsModal';
+import Sidebar from '../../components/AdminSidebar';
+import GenerateCredentialsModal from '../../components/GenerateCredentialsModal';
 
 interface StudentBooking {
   id: string;
