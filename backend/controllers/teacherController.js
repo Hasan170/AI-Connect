@@ -1,18 +1,6 @@
 const TeacherCredentials = require('../models/TeacherCredentials');
 const TeacherDetails = require('../models/TeacherDetails');
 
-// Signup for teachers
-const signupTeacher = async (req, res) => {
-  const { name, email, password } = req.body;
-  try {
-    const newTeacher = new TeacherCredentials({ name, email, password });
-    await newTeacher.save();
-    res.status(201).json({ message: 'Teacher signed up successfully', teacher: newTeacher });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
-
 // Login for teachers
 const loginTeacher = async (req, res) => {
   const { email, password } = req.body;
@@ -43,4 +31,4 @@ const getTeacherDetails = async (req, res) => {
   }
 };  
 
-module.exports = { signupTeacher, loginTeacher, getTeacherDetails };
+module.exports = { loginTeacher, getTeacherDetails };

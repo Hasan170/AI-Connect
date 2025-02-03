@@ -2,18 +2,6 @@ const { get } = require('http');
 const StudentCredentials = require('../models/StudentCredentials');
 const StudentDetails = require('../models/StudentDetails');
 
-// Signup for students
-const signupStudent = async (req, res) => {
-  const { name, email, password } = req.body;
-  try {
-    const newStudent = new StudentCredentials({ name, email, password });
-    await newStudent.save();
-    res.status(201).json({ message: 'Student signed up successfully', student: newStudent });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
-
 // Login for students
 const loginStudent = async (req, res) => {
   const { email, password } = req.body;
@@ -44,4 +32,4 @@ const getStudentDetails = async (req, res) => {
   }
 };  
 
-module.exports = { signupStudent, loginStudent, getStudentDetails };
+module.exports = { loginStudent, getStudentDetails };
