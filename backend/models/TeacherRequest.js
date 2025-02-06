@@ -12,4 +12,4 @@ const teacherRequestSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
-module.exports = mongoose.model('TeacherRequest', teacherRequestSchema);
+module.exports = mongoose.model('teacherrequest', teacherRequestSchema);

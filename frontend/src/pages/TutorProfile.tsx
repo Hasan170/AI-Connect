@@ -37,6 +37,7 @@ const TutorProfile = () => {
         // Fetch teacher data from the backend
         const response = await api.get(`/api/teacher/profile/${email}`);
         const teacher = response.data;
+        console.log('Teacher data:', teacher);
   
         // Update state with fetched data
         setProfileData({

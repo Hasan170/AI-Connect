@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Filter } from 'lucide-react';
 import Sidebar from '../../components/AdminSidebar';
 import GenerateCredentialsModal from '../../components/GenerateCredentialsModal';
+import api from '../../api';
 
 interface StudentBooking {
   id: string;
@@ -10,6 +11,7 @@ interface StudentBooking {
   grade: string;
   subject: string;
   date: string;
+  password?: string; 
 }
 
 const Students = () => {
@@ -17,34 +19,32 @@ const Students = () => {
   const [filterSubject, setFilterSubject] = useState('all');
   const [selectedStudent, setSelectedStudent] = useState<StudentBooking | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [students, setStudents] = useState<StudentBooking[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  // Dummy data from book class form submissions
-  const [students] = useState<StudentBooking[]>([
-    {
-      id: '1',
-      fullName: 'John Doe',
-      email: 'john@example.com',
-      grade: '10th Grade',
-      subject: 'Mathematics',
-      date: '2024-03-15'
-    },
-    {
-      id: '2',
-      fullName: 'Jane Smith',
-      email: 'jane@example.com',
-      grade: '11th Grade',
-      subject: 'Physics',
-      date: '2024-03-16'
-    },
-    {
-      id: '3',
-      fullName: 'Mike Johnson',
-      email: 'mike@example.com',
-      grade: '9th Grade',
-      subject: 'Chemistry',
-      date: '2024-03-17'
-    }
-  ]);
+  useEffect(() => {
+    const fetchStudentRequests = async () => {
+      try {
+        const response = await api.get('/requests/pending');
+        const studentRequests = response.data.students.map((request: any) => ({
+          id: request._id,
+          fullName: request.fullName,
+          email: request.email,
+          grade: request.grade,
+          subject: request.subject,
+          date: new Date(request.preferredDate).toLocaleDateString()
+        }));
+        setStudents(studentRequests);
+        setLoading(false);
+      } catch (err) {
+        setError('Failed to fetch student requests');
+        setLoading(false);
+      }
+    };
+  
+    fetchStudentRequests();
+  }, []);
 
   const filteredStudents = students.filter(student => {
     const matchesSearch = 
@@ -56,9 +56,27 @@ const Students = () => {
 
   const subjects = [...new Set(students.map(student => student.subject))];
 
-  const handleGenerateCredentials = (student: StudentBooking) => {
-    setSelectedStudent(student);
-    setIsModalOpen(true);
+  const handleGenerateCredentials = async (studentData: StudentBooking) => {
+    try {
+      // First create student credentials
+      await api.post('/api/students/create', {
+        name: studentData.fullName,
+        email: studentData.email,
+        grade: studentData.grade,
+        password: "TEMPORARY_PASSWORD" // You'll want to generate this
+      });
+  
+      // Then delete the request
+      await api.delete(`/api/requests/student/${studentData.id}`);
+      
+      // Update local state
+      setStudents(prev => prev.filter(s => s.id !== studentData.id));
+      setIsModalOpen(false);
+      alert('Credentials generated successfully!');
+    } catch (err) {
+      console.error('Generation error:', err);
+      alert('Failed to generate credentials. Please check console for details.');
+    }
   };
 
   return (
@@ -132,27 +150,52 @@ const Students = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredStudents.map((student) => (
-                    <tr key={student.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">{student.fullName}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{student.email}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{student.grade}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
-                          {student.subject}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">{student.date}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <button
-                          onClick={() => handleGenerateCredentials(student)}
-                          className="text-navbar hover:text-opacity-80"
-                        >
-                          Generate Credentials
-                        </button>
+                  {loading ? (
+                    <tr>
+                      <td colSpan={6} className="px-6 py-4 text-center">
+                        <div className="flex justify-center">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-navbar"></div>
+                        </div>
                       </td>
                     </tr>
-                  ))}
+                  ) : error ? (
+                    <tr>
+                      <td colSpan={6} className="px-6 py-4 text-center text-red-500">
+                        {error}
+                      </td>
+                    </tr>
+                  ) : filteredStudents.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                        No student requests found
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredStudents.map((student) => (
+                      <tr key={student.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap">{student.fullName}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">{student.email}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">{student.grade}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
+                            {student.subject}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">{student.date}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <button
+                            onClick={() => {
+                              setSelectedStudent(student);
+                              setIsModalOpen(true);
+                            }}
+                            className="text-navbar hover:text-opacity-80 bg-blue-50 px-4 py-2 rounded-lg transition-all"
+                          >
+                            Generate Credentials
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -163,6 +206,14 @@ const Students = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         student={selectedStudent}
+        onSubmit={async (credentials) => {
+          if (selectedStudent) {
+            await handleGenerateCredentials({
+              ...selectedStudent,
+              ...credentials
+            });
+          }
+        }}
       />
     </div>
   );

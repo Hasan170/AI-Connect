@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Calendar, Clock, BookOpen, ArrowRight, CheckCircle } from 'lucide-react';
+import api from '../api';
 
 const BookClass = () => {
   const [formData, setFormData] = useState({
@@ -64,11 +65,34 @@ const BookClass = () => {
     }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log('Form submitted:', formData);
-    // Add your API call here
-  };
+// Update the handleSubmit function
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  try {
+    const response = await api.post('/requests/student', {
+      fullName: formData.fullName,
+      email: formData.email,
+      grade: formData.grade,
+      subject: formData.subject,
+      preferredDate: formData.date
+    });
+    
+    if (response.status === 201) {
+      alert('Request submitted successfully!');
+      // Reset form
+      setFormData({
+        fullName: '',
+        email: '',
+        grade: '',
+        subject: '',
+        date: ''
+      });
+    }
+  } catch (error) {
+    console.error('Submission error:', error);
+    alert('Failed to submit request. Please try again.');
+  }
+};
 
   return (
     <div className="pt-24 px-6 bg-background min-h-screen">

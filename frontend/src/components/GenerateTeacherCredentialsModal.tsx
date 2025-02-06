@@ -1,11 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
+import api from '../api';
+import { AxiosError } from 'axios';
 
 interface GenerateTeacherCredentialsModalProps {
   isOpen: boolean;
   onClose: () => void;
   teacher: TeacherApplication | null;
+  onSubmit: (credentials: any) => Promise<void>;
 }
+
 
 interface TeacherApplication {
   id: string;
@@ -29,17 +33,58 @@ const GenerateTeacherCredentialsModal: React.FC<GenerateTeacherCredentialsModalP
     confirmPassword: ''
   });
 
+  useEffect(() => {
+    if (teacher) {
+      setFormData({
+        name: teacher.fullName || '',
+        age: '',
+        subject: teacher.subject || '',
+        experience: teacher.experience || '',
+        qualification: teacher.qualification || '',
+        email: teacher.email || '',
+        password: '',
+        confirmPassword: ''
+      });
+    }
+  }, [teacher]);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission logic here
-    console.log('Form submitted:', formData);
-    onClose();
+  
+    if (formData.password !== formData.confirmPassword) {
+      alert("Passwords don't match!");
+      return;
+    }
+  
+    try {
+      const payload = {
+        requestId: teacher?.id,
+        name: formData.name,
+        email: formData.email,
+        expertise: formData.subject,
+        experience: parseInt(formData.experience) || 0, // Ensure number
+        qualification: formData.qualification,
+        password: formData.password
+      };
+  
+      console.log("🚀 Sending Payload:", payload); // Debugging log
+  
+      await api.post('/teacher/create', payload);
+  
+      alert('Teacher credentials created successfully!');
+      onClose();
+    } catch (err: unknown) { // ✅ Explicitly mark `err` as unknown
+      const error = err as AxiosError;
+        alert('Failed to create teacher. Check console for details.');
+    }
   };
+  
+  
 
   if (!isOpen) return null;
 

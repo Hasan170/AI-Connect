@@ -30,7 +30,7 @@ export default function AdminDashboard() {
 
   const approveStudent = (id: string) => {
     setStudentRequests((prev) => {
-      const updated = prev.map((req) =>
+      const updated = prev.map((req): ClassRequest =>
         req.id === id ? { ...req, status: 'approved' } : req
       );
       const approvedRequest = updated.find((req) => req.id === id);
@@ -47,7 +47,7 @@ export default function AdminDashboard() {
 
   const approveTutor = (id: string) => {
     setTutorRequests((prev) => {
-      const updated = prev.map((req) =>
+      const updated = prev.map((req): ClassRequest =>
         req.id === id ? { ...req, status: 'approved' } : req
       );
       const approvedRequest = updated.find((req) => req.id === id);
