@@ -1,10 +1,19 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 
 interface GenerateCredentialsModalProps {
   isOpen: boolean;
   onClose: () => void;
   student: StudentBooking | null;
+  onSubmit: (credentials: {
+    name: string;
+    age: string;
+    grade: string;
+    board: string;
+    subjects: string;
+    email: string;
+    password: string;
+  }) => void;
 }
 
 interface StudentBooking {
@@ -16,17 +25,33 @@ interface StudentBooking {
   date: string;
 }
 
-const GenerateCredentialsModal: React.FC<GenerateCredentialsModalProps> = ({ isOpen, onClose, student }) => {
+const GenerateCredentialsModal: React.FC<GenerateCredentialsModalProps> = ({ isOpen, onClose, student, onSubmit }) => {
   const [formData, setFormData] = useState({
-    name: student?.fullName || '',
+    name: '',
     age: '',
-    grade: student?.grade || '',
+    grade: '',
     board: '',
-    subjects: student?.subject || '',
-    email: student?.email || '',
+    subjects: '',
+    email: '',
     password: '',
     confirmPassword: ''
   });
+
+    // Use useEffect to update formData when the student changes
+    useEffect(() => {
+      if (student) {
+        setFormData({
+          name: student.fullName || '',
+          age: '',
+          grade: student.grade || '',
+          board: '',
+          subjects: student.subject || '',
+          email: student.email || '',
+          password: '',
+          confirmPassword: ''
+        });
+      }
+    }, [student]); 
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -35,8 +60,24 @@ const GenerateCredentialsModal: React.FC<GenerateCredentialsModalProps> = ({ isO
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission logic here
-    console.log('Form submitted:', formData);
+    
+    // Add password validation
+    if (formData.password !== formData.confirmPassword) {
+      alert("Passwords don't match!");
+      return;
+    }
+  
+    // Call the onSubmit prop with form data
+    onSubmit({
+      name: formData.name,
+      age: formData.age,
+      grade: formData.grade,
+      board: formData.board,
+      subjects: formData.subjects,
+      email: formData.email,
+      password: formData.password
+    });
+    
     onClose();
   };
 

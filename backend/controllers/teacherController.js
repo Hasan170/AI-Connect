@@ -1,5 +1,7 @@
+const bcrypt = require('bcrypt');
 const TeacherCredentials = require('../models/TeacherCredentials');
 const TeacherDetails = require('../models/TeacherDetails');
+const TeacherRequest = require('../models/TeacherRequest'); // Add this line
 
 // Login for teachers
 const loginTeacher = async (req, res) => {
@@ -31,4 +33,46 @@ const getTeacherDetails = async (req, res) => {
   }
 };  
 
-module.exports = { loginTeacher, getTeacherDetails };
+// Create teacher credentials & details (Admin Action)
+const createTeacher = async (req, res) => {
+  try {
+    const { requestId, name, email, expertise, experience, qualification,  password } = req.body;
+
+    // Hash the password before storing
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Save teacher credentials (for login)
+    const teacherCredentials = new TeacherCredentials({
+      email,
+      password: hashedPassword
+    });
+
+    // Save teacher details (for profile)
+    const teacherDetails = new TeacherDetails({
+      name,
+      email,
+      expertise,
+      experience,
+      qualification
+    });
+
+    // Save both documents in MongoDB
+    await teacherCredentials.save();
+    await teacherDetails.save();
+
+    if (!requestId) {
+      console.log("❌ Missing requestId! Received:", req.body); // Debugging log
+      return res.status(400).json({ message: 'Missing rrequest ID' });
+    }
+    // Delete the pending request using the requestId
+    await TeacherRequest.findByIdAndDelete(requestId);
+
+    res.status(201).json({ message: 'Teacher credentials and details created successfully' });
+
+  } catch (error) {
+    console.error('Error creating teacher:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+module.exports = { loginTeacher, getTeacherDetails, createTeacher };

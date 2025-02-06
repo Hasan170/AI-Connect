@@ -1,7 +1,27 @@
-import React from 'react';
+import React, { useState } from 'react';
+import api from '../api';
 import { BookOpen, Users, DollarSign, Award, Star, ArrowRight } from 'lucide-react';
 
 const BecomeTutor = () => {
+
+  const [formData, setFormData] = useState({
+    fullName: '',
+    email: '',
+    phone: '',
+    expertise: '',
+    experience: '',
+    qualification: '',
+    bio: ''
+  });
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
   const benefits = [
     {
       icon: <DollarSign className="w-8 h-8" />,
@@ -24,6 +44,35 @@ const BecomeTutor = () => {
       description: "Get rated and reviewed by students"
     }
   ];
+
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  try {
+    await api.post('/requests/teacher', {
+      fullName: formData.fullName,
+      email: formData.email,
+      phone: formData.phone,
+      expertise: formData.expertise,
+      experience: Number(formData.experience),
+      qualification: formData.qualification,
+      bio: formData.bio
+    });
+    alert('Application submitted successfully!');
+    // Reset form
+    setFormData({
+      fullName: '',
+      email: '',
+      phone: '',
+      expertise: '',
+      experience: '',
+      qualification: '',
+      bio: ''
+    });
+  } catch (error) {
+    console.error('Submission error:', error);
+    alert('Submission failed. Please try again.');
+  }
+};
 
   return (
     <div className="pt-24 px-6 bg-background min-h-screen">
@@ -85,16 +134,19 @@ const BecomeTutor = () => {
           <div className="bg-white p-8 rounded-lg shadow-lg transform hover:scale-[1.01] transition-all duration-300">
             <h2 className="text-2xl font-semibold mb-6 text-text-primary">Application Form</h2>
             
-            <form className="space-y-6">
+            <form className="space-y-6" onSubmit={handleSubmit}>
               <div>
                 <label className="block text-sm font-medium text-text-primary mb-1">
                   Full Name
                 </label>
                 <input
-                  type="text"
-                  className="w-full px-4 py-2 border border-card rounded-lg focus:outline-none focus:ring-2 focus:ring-navbar focus:border-transparent transition-all duration-300"
-                  required
-                />
+                type="text"
+                name="fullName"
+                value={formData.fullName}
+                onChange={handleInputChange}
+                className="w-full px-4 py-2 border border-card rounded-lg focus:outline-none focus:ring-2 focus:ring-navbar focus:border-transparent transition-all duration-300"
+                required
+              />
               </div>
               
               <div>
@@ -102,10 +154,13 @@ const BecomeTutor = () => {
                   Email
                 </label>
                 <input
-                  type="email"
-                  className="w-full px-4 py-2 border border-card rounded-lg focus:outline-none focus:ring-2 focus:ring-navbar focus:border-transparent transition-all duration-300"
-                  required
-                />
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                className="w-full px-4 py-2 border border-card rounded-lg focus:outline-none focus:ring-2 focus:ring-navbar focus:border-transparent transition-all duration-300"
+                required
+              />
               </div>
 
               <div>
@@ -113,10 +168,13 @@ const BecomeTutor = () => {
                   Phone Number
                 </label>
                 <input
-                  type="tel"
-                  className="w-full px-4 py-2 border border-card rounded-lg focus:outline-none focus:ring-2 focus:ring-navbar focus:border-transparent transition-all duration-300"
-                  required
-                />
+                type="tel"
+                name="phone"
+                value={formData.phone}
+                onChange={handleInputChange}
+                className="w-full px-4 py-2 border border-card rounded-lg focus:outline-none focus:ring-2 focus:ring-navbar focus:border-transparent transition-all duration-300"
+                required
+              />
               </div>
               
               <div>
@@ -124,6 +182,9 @@ const BecomeTutor = () => {
                   Subject Expertise
                 </label>
                 <select 
+                  name="expertise"
+                  value={formData.expertise}
+                  onChange={handleInputChange}
                   className="w-full px-4 py-2 border border-card rounded-lg focus:outline-none focus:ring-2 focus:ring-navbar focus:border-transparent transition-all duration-300"
                   required
                 >
@@ -144,7 +205,10 @@ const BecomeTutor = () => {
                 </label>
                 <input
                   type="number"
+                  name="experience"
                   min="0"
+                  value={formData.experience}
+                  onChange={handleInputChange}
                   className="w-full px-4 py-2 border border-card rounded-lg focus:outline-none focus:ring-2 focus:ring-navbar focus:border-transparent transition-all duration-300"
                   required
                 />
@@ -155,10 +219,13 @@ const BecomeTutor = () => {
                   Highest Qualification
                 </label>
                 <input
-                  type="text"
-                  className="w-full px-4 py-2 border border-card rounded-lg focus:outline-none focus:ring-2 focus:ring-navbar focus:border-transparent transition-all duration-300"
-                  required
-                />
+                type="text"
+                name="qualification"
+                value={formData.qualification}
+                onChange={handleInputChange}
+                className="w-full px-4 py-2 border border-card rounded-lg focus:outline-none focus:ring-2 focus:ring-navbar focus:border-transparent transition-all duration-300"
+                required
+              />
               </div>
               
               <div>
@@ -166,11 +233,14 @@ const BecomeTutor = () => {
                   Tell us about yourself
                 </label>
                 <textarea
-                  rows={4}
-                  className="w-full px-4 py-2 border border-card rounded-lg focus:outline-none focus:ring-2 focus:ring-navbar focus:border-transparent transition-all duration-300"
-                  placeholder="Share your teaching experience and approach..."
-                  required
-                ></textarea>
+                name="bio"
+                rows={4}
+                value={formData.bio}
+                onChange={handleInputChange}
+                className="w-full px-4 py-2 border border-card rounded-lg focus:outline-none focus:ring-2 focus:ring-navbar focus:border-transparent transition-all duration-300"
+                placeholder="Share your teaching experience and approach..."
+                required
+              ></textarea>
               </div>
               
               <button
