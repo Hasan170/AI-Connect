@@ -18,9 +18,9 @@ const TutorProfile = () => {
   const [isRescheduleModalOpen, setIsRescheduleModalOpen] = useState(false);
   const [timeLeft, setTimeLeft] = useState(1800); 
   const [profileData, setProfileData] = useState<ProfileData>({
-    name: 'Dr. Smith',
-    expertise: ['Physics', 'Mathematics'],
-    teachingHours: '250+ hours',
+    name: '',
+    expertise: [''],
+    teachingHours: '',
     rating: 4.8
   });
   const [rescheduleClass, setRescheduleClass] = useState<{ id: string; date: string; time: string } | null>(null);
@@ -35,7 +35,7 @@ const TutorProfile = () => {
         }
   
         // Fetch teacher data from the backend
-        const response = await api.get(`/api/teacher/profile/${email}`);
+        const response = await api.get(`/teacher/details/${email}`);
         const teacher = response.data;
         console.log('Teacher data:', teacher);
   

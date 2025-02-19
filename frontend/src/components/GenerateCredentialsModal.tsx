@@ -1,19 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
+import api from '../api';
+import { AxiosError } from 'axios';
 
 interface GenerateCredentialsModalProps {
   isOpen: boolean;
   onClose: () => void;
   student: StudentBooking | null;
-  onSubmit: (credentials: {
-    name: string;
-    age: string;
-    grade: string;
-    board: string;
-    subjects: string;
-    email: string;
-    password: string;
-  }) => void;
+  onSuccess: (studentId: string) => void;
 }
 
 interface StudentBooking {
@@ -25,14 +19,14 @@ interface StudentBooking {
   date: string;
 }
 
-const GenerateCredentialsModal: React.FC<GenerateCredentialsModalProps> = ({ isOpen, onClose, student, onSubmit }) => {
+const GenerateCredentialsModal: React.FC<GenerateCredentialsModalProps> = ({ isOpen, onClose, student, onSuccess }) => {
   const [formData, setFormData] = useState({
-    name: '',
+    name: student?.fullName || '',
     age: '',
-    grade: '',
+    grade: student?.grade || '',
     board: '',
-    subjects: '',
-    email: '',
+    subjects: student?.subject || '',
+    email: student?.email || '',
     password: '',
     confirmPassword: ''
   });
@@ -58,7 +52,7 @@ const GenerateCredentialsModal: React.FC<GenerateCredentialsModalProps> = ({ isO
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Add password validation
@@ -66,9 +60,9 @@ const GenerateCredentialsModal: React.FC<GenerateCredentialsModalProps> = ({ isO
       alert("Passwords don't match!");
       return;
     }
-  
-    // Call the onSubmit prop with form data
-    onSubmit({
+
+    const payload = {
+      requestId: student?.id,
       name: formData.name,
       age: formData.age,
       grade: formData.grade,
@@ -76,9 +70,21 @@ const GenerateCredentialsModal: React.FC<GenerateCredentialsModalProps> = ({ isO
       subjects: formData.subjects,
       email: formData.email,
       password: formData.password
-    });
-    
-    onClose();
+    };
+
+    try {
+      console.log("🚀 Sending Payload:", payload); // Debugging log
+      await api.post('/student/create', payload);
+      alert('Student credentials created successfully!');
+      // Inform the parent that this teacher's request is processed
+      if (student) {
+        onSuccess(student.id);
+      }
+      onClose();
+    } catch (err: unknown) {
+      const error = err as AxiosError;
+      alert('Failed to create student. Check console for details.');
+    }
   };
 
   if (!isOpen) return null;

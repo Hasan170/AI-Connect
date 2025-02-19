@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const teacherRequestSchema = new mongoose.Schema({
   fullName: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
+  email: { type: String, required: true, unique: true, lowercase: true }, // ✅ Always save as lowercase
   phone: { type: String, required: true },
   expertise: { type: String, required: true },
   experience: { type: Number, required: true },

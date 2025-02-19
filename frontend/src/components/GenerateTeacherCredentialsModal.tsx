@@ -7,9 +7,8 @@ interface GenerateTeacherCredentialsModalProps {
   isOpen: boolean;
   onClose: () => void;
   teacher: TeacherApplication | null;
-  onSubmit: (credentials: any) => Promise<void>;
+  onSuccess: (teacherId: string) => void; // callback to inform parent on success
 }
-
 
 interface TeacherApplication {
   id: string;
@@ -21,7 +20,12 @@ interface TeacherApplication {
   applicationDate: string;
 }
 
-const GenerateTeacherCredentialsModal: React.FC<GenerateTeacherCredentialsModalProps> = ({ isOpen, onClose, teacher }) => {
+const GenerateTeacherCredentialsModal: React.FC<GenerateTeacherCredentialsModalProps> = ({
+  isOpen,
+  onClose,
+  teacher,
+  onSuccess,
+}) => {
   const [formData, setFormData] = useState({
     name: teacher?.fullName || '',
     age: '',
@@ -55,36 +59,36 @@ const GenerateTeacherCredentialsModal: React.FC<GenerateTeacherCredentialsModalP
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-  
+
     if (formData.password !== formData.confirmPassword) {
       alert("Passwords don't match!");
       return;
     }
-  
+
+    const payload = {
+      requestId: teacher?.id,
+      name: formData.name,
+      email: formData.email,
+      expertise: formData.subject,
+      experience: parseInt(formData.experience) || 0,
+      qualification: formData.qualification,
+      password: formData.password
+    };
+
     try {
-      const payload = {
-        requestId: teacher?.id,
-        name: formData.name,
-        email: formData.email,
-        expertise: formData.subject,
-        experience: parseInt(formData.experience) || 0, // Ensure number
-        qualification: formData.qualification,
-        password: formData.password
-      };
-  
       console.log("🚀 Sending Payload:", payload); // Debugging log
-  
       await api.post('/teacher/create', payload);
-  
       alert('Teacher credentials created successfully!');
+      // Inform the parent that this teacher's request is processed
+      if (teacher) {
+        onSuccess(teacher.id);
+      }
       onClose();
-    } catch (err: unknown) { // ✅ Explicitly mark `err` as unknown
+    } catch (err: unknown) {
       const error = err as AxiosError;
-        alert('Failed to create teacher. Check console for details.');
+      alert('Failed to create teacher. Check console for details.');
     }
   };
-  
-  
 
   if (!isOpen) return null;
 
@@ -98,6 +102,7 @@ const GenerateTeacherCredentialsModal: React.FC<GenerateTeacherCredentialsModalP
           </button>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* All your form inputs here */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
             <input
@@ -120,6 +125,7 @@ const GenerateTeacherCredentialsModal: React.FC<GenerateTeacherCredentialsModalP
               required
             />
           </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
             <input
@@ -131,10 +137,11 @@ const GenerateTeacherCredentialsModal: React.FC<GenerateTeacherCredentialsModalP
               required
             />
           </div>
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Experience</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Experience (years)</label>
             <input
-              type="text"
+              type="number"
               name="experience"
               value={formData.experience}
               onChange={handleInputChange}
@@ -142,6 +149,7 @@ const GenerateTeacherCredentialsModal: React.FC<GenerateTeacherCredentialsModalP
               required
             />
           </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Qualification</label>
             <input
@@ -153,6 +161,7 @@ const GenerateTeacherCredentialsModal: React.FC<GenerateTeacherCredentialsModalP
               required
             />
           </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
             <input
@@ -164,6 +173,7 @@ const GenerateTeacherCredentialsModal: React.FC<GenerateTeacherCredentialsModalP
               required
             />
           </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
             <input
@@ -175,6 +185,7 @@ const GenerateTeacherCredentialsModal: React.FC<GenerateTeacherCredentialsModalP
               required
             />
           </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
             <input
@@ -186,6 +197,7 @@ const GenerateTeacherCredentialsModal: React.FC<GenerateTeacherCredentialsModalP
               required
             />
           </div>
+          {/* Repeat for Age, Subject, Experience, Qualification, Email, Password, Confirm Password */}
           <button
             type="submit"
             className="w-full bg-navbar text-white py-2 rounded-lg hover:bg-opacity-90 transition-all duration-300"

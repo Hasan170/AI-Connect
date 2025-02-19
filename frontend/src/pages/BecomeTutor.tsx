@@ -68,9 +68,15 @@ const handleSubmit = async (e: React.FormEvent) => {
       qualification: '',
       bio: ''
     });
-  } catch (error) {
+  } catch (error: any) { // Use TypeScript type assertion if needed
     console.error('Submission error:', error);
-    alert('Submission failed. Please try again.');
+    
+    // Improved error handling
+    const errorMessage = error.response?.data?.message 
+      || error.message 
+      || "Submission failed. Please try again.";
+
+    alert(errorMessage);
   }
 };
 

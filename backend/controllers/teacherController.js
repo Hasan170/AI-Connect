@@ -38,13 +38,10 @@ const createTeacher = async (req, res) => {
   try {
     const { requestId, name, email, expertise, experience, qualification,  password } = req.body;
 
-    // Hash the password before storing
-    const hashedPassword = await bcrypt.hash(password, 10);
-
     // Save teacher credentials (for login)
     const teacherCredentials = new TeacherCredentials({
       email,
-      password: hashedPassword
+      password
     });
 
     // Save teacher details (for profile)

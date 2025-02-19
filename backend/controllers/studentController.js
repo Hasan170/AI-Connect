@@ -1,6 +1,7 @@
 const { get } = require('http');
 const StudentCredentials = require('../models/StudentCredentials');
 const StudentDetails = require('../models/StudentDetails');
+const StudentRequest = require('../models/StudentRequest');
 
 // Login for students
 const loginStudent = async (req, res) => {
@@ -32,4 +33,44 @@ const getStudentDetails = async (req, res) => {
   }
 };  
 
-module.exports = { loginStudent, getStudentDetails };
+// Create student credentials & details (Admin Action)
+const createStudent = async (req, res) => {
+  try {
+    const { requestId, name, age, grade, board, subjects, email,  password } = req.body;
+
+    // Save student credentials (for login)
+    const studentCredentials = new StudentCredentials({
+      email,
+      password
+    });
+
+    // Save student details (for profile)
+    const studentDetails = new StudentDetails({
+      email,
+      name,
+      grade,
+      board,
+      age,
+      subjects
+    });
+
+    // Save both documents in MongoDB
+    await studentCredentials.save();
+    await studentDetails.save();
+
+    if (!requestId) {
+      console.log("❌ Missing requestId! Received:", req.body); // Debugging log
+      return res.status(400).json({ message: 'Missing rrequest ID' });
+    }
+    // Delete the pending request using the requestId
+    await StudentRequest.findByIdAndDelete(requestId);
+
+    res.status(201).json({ message: 'Student credentials and details created successfully' });
+
+  } catch (error) {
+    console.error('Error creating student:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+module.exports = { loginStudent, getStudentDetails, createStudent };
