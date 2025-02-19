@@ -56,28 +56,28 @@ const Students = () => {
 
   const subjects = [...new Set(students.map(student => student.subject))];
 
-  const handleGenerateCredentials = async (studentData: StudentBooking) => {
-    try {
-      // First create student credentials
-      await api.post('/api/students/create', {
-        name: studentData.fullName,
-        email: studentData.email,
-        grade: studentData.grade,
-        password: "TEMPORARY_PASSWORD" // You'll want to generate this
-      });
+  // const handleGenerateCredentials = async (studentData: StudentBooking) => {
+  //   try {
+  //     // First create student credentials s
+  //     await api.post('/api/students/create', {
+  //       name: studentData.fullName,
+  //       email: studentData.email,
+  //       grade: studentData.grade,
+  //       password: "TEMPORARY_PASSWORD" // You'll want to generate this
+  //     });
   
-      // Then delete the request
-      await api.delete(`/api/requests/student/${studentData.id}`);
+  //     // Then delete the request
+  //     await api.delete(`/requests/student/${studentData.id}`);
       
-      // Update local state
-      setStudents(prev => prev.filter(s => s.id !== studentData.id));
-      setIsModalOpen(false);
-      alert('Credentials generated successfully!');
-    } catch (err) {
-      console.error('Generation error:', err);
-      alert('Failed to generate credentials. Please check console for details.');
-    }
-  };
+  //     // Update local state
+  //     setStudents(prev => prev.filter(s => s.id !== studentData.id));
+  //     setIsModalOpen(false);
+  //     alert('Credentials generated successfully!');
+  //   } catch (err) {
+  //     console.error('Generation error:', err);
+  //     alert('Failed to generate credentials. Please check console for details.');
+  //   }
+  // };
 
   return (
     <div className="flex">
@@ -206,14 +206,18 @@ const Students = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         student={selectedStudent}
-        onSubmit={async (credentials) => {
-          if (selectedStudent) {
-            await handleGenerateCredentials({
-              ...selectedStudent,
-              ...credentials
-            });
-          }
+        onSuccess={(studentId) => {
+          setStudents(prev => prev.filter(t => t.id !== studentId));
+          setSelectedStudent(null);
         }}
+        // onSubmit={async (credentials) => {
+        //   if (selectedStudent) {
+        //     await handleGenerateCredentials({
+        //       ...selectedStudent,
+        //       ...credentials
+        //     });
+        //   }
+        // }}
       />
     </div>
   );

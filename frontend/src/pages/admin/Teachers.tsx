@@ -58,29 +58,6 @@ const Teachers = () => {
 
   const subjects = [...new Set(teachers.map(teacher => teacher.subject))];
 
-  const handleGenerateCredentials = async (teacherData: TeacherApplication) => {
-    try {
-      // Call API to create teacher credentials and details
-      await api.post('/teacher/create', {
-        requestId: teacherData.id, // Send the request ID to delete it after approval
-        name: teacherData.fullName,
-        email: teacherData.email,
-        expertise: teacherData.subject,
-        experience: parseInt(teacherData.experience),
-        qualification: teacherData.qualification,
-        password: "TEMPORARY_PASSWORD" // Replace this with a generated password in production
-      });
-  
-      // Remove the teacher from UI after approval
-      setTeachers(prev => prev.filter(t => t.id !== teacherData.id));
-      setIsModalOpen(false);
-      alert('Credentials generated successfully!');
-    } catch (err) {
-      console.error('Generation error:', err);
-      alert('Failed to generate credentials. Please check console for details.');
-    }
-  };
-
   return (
     <div className="flex">
       <Sidebar />
@@ -206,19 +183,15 @@ const Teachers = () => {
           </div>
         </div>
       </div>
+
+      {/* Pass the onSuccess callback to remove the teacher after successful API call */}
       <GenerateTeacherCredentialsModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         teacher={selectedTeacher}
-        onSubmit={async (credentials) => {
-          if (!selectedTeacher) return;
-
-          await handleGenerateCredentials({
-            ...selectedTeacher,
-            ...credentials
-          });
-
-          setSelectedTeacher(null); // Reset selection after submission
+        onSuccess={(teacherId) => {
+          setTeachers(prev => prev.filter(t => t.id !== teacherId));
+          setSelectedTeacher(null);
         }}
       />
     </div>

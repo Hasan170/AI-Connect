@@ -69,30 +69,50 @@ const BookClass = () => {
 const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
   try {
-    const response = await api.post('/requests/student', {
+    await api.post('/requests/student', {
       fullName: formData.fullName,
       email: formData.email,
       grade: formData.grade,
       subject: formData.subject,
       preferredDate: formData.date
     });
-    
-    if (response.status === 201) {
-      alert('Request submitted successfully!');
-      // Reset form
-      setFormData({
-        fullName: '',
-        email: '',
-        grade: '',
-        subject: '',
-        date: ''
-      });
-    }
-  } catch (error) {
+    alert('Application submitted successfully!');
+    // Reset form
+    setFormData({
+      fullName: '',
+      email: '',
+      grade: '',
+      subject: '',
+      date: ''
+    });
+  } catch (error: any) { // Use TypeScript type assertion if needed
     console.error('Submission error:', error);
-    alert('Failed to submit request. Please try again.');
+    
+    // Improved error handling
+    const errorMessage = error.response?.data?.message 
+      || error.message 
+      || "Submission failed. Please try again.";
+
+    alert(errorMessage);
   }
 };
+    
+//     if (response.status === 201) {
+//       alert('Request submitted successfully!');
+//       // Reset form
+//       setFormData({
+//         fullName: '',
+//         email: '',
+//         grade: '',
+//         subject: '',
+//         date: ''
+//       });
+//     }
+//   } catch (error) {
+//     console.error('Submission error:', error);
+//     alert('Failed to submit request. Please try again.');
+//   }
+// };
 
   return (
     <div className="pt-24 px-6 bg-background min-h-screen">
