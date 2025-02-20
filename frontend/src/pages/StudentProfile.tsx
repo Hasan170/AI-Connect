@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Line } from 'react-chartjs-2';
-import { Edit, Bell, Book, Calendar, X, CheckCircle, Clock, User } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Edit, Bell, Book, Calendar, X, CheckCircle, Clock, User, Video } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
 import api from '../api';
 import StudentSidebar from '../components/StudentSidebar';
 import Notebook from '../components/Notebook';
@@ -99,7 +99,7 @@ const StudentProfile = () => {
     {
       subject: 'Math',
       status: 'scheduled',
-      time: 'Tomorrow, 10:00 AM',
+      time: 'Today, 10:00 AM',
       tutor: 'Dr. Smith'
     },
     {
@@ -197,25 +197,32 @@ const StudentProfile = () => {
                   <Book className="text-navbar" size={20} />
                 </div>
                 {classItem.status === 'scheduled' ? (
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-green-600">
-                      <CheckCircle size={16} />
-                      <p className="text-sm">Class Scheduled</p>
-                    </div>
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <Clock size={16} />
-                      <p className="text-sm">{classItem.time}</p>
-                    </div>
-                    <p className="text-sm text-gray-600">Tutor: {classItem.tutor}</p>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-green-600">
+                    <CheckCircle size={16} />
+                    <p className="text-sm">Class Scheduled</p>
                   </div>
-                ) : (
-                  <>
-                    <p className="text-gray-500 mb-4">No class scheduled</p>
-                    <button className="w-full bg-navbar text-white py-2 rounded-lg hover:bg-button-secondary transition-colors transform hover:scale-[1.02]">
-                      Request Class
-                    </button>
-                  </>
-                )}
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <Clock size={16} />
+                    <p className="text-sm">{classItem.time}</p>
+                  </div>
+                  <p className="text-sm text-gray-600">Tutor: {classItem.tutor}</p>
+                  <Link
+                    to="/student/classroom"
+                    className="mt-4 w-full bg-navbar text-white py-2 rounded-lg hover:bg-opacity-90 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Video size={16} />
+                    Join Class
+                  </Link>
+                </div>
+              ) : (
+                <>
+                  <p className="text-gray-500 mb-4">No class scheduled</p>
+                  <button className="w-full bg-navbar text-white py-2 rounded-lg hover:bg-button-secondary transition-colors transform hover:scale-[1.02]">
+                    Request Class
+                  </button>
+                </>
+              )}
               </div>
             ))}
           </div>
