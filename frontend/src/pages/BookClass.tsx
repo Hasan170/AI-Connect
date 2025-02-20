@@ -8,7 +8,8 @@ const BookClass = () => {
     email: '',
     grade: '',
     subject: '',
-    date: ''
+    dob: '',
+    board: ''
   });
 
   const subjects = [
@@ -19,6 +20,10 @@ const BookClass = () => {
   const grades = [
     '6th Grade', '7th Grade', '8th Grade', '9th Grade',
     '10th Grade', '11th Grade', '12th Grade'
+  ];
+
+  const boards = [
+    'CBSE', 'ICSE', 'State Board', 'IB', 'IGCSE', 'others'
   ];
 
   const features = [
@@ -65,54 +70,35 @@ const BookClass = () => {
     }));
   };
 
-// Update the handleSubmit function
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  try {
-    await api.post('/requests/student', {
-      fullName: formData.fullName,
-      email: formData.email,
-      grade: formData.grade,
-      subject: formData.subject,
-      preferredDate: formData.date
-    });
-    alert('Application submitted successfully!');
-    // Reset form
-    setFormData({
-      fullName: '',
-      email: '',
-      grade: '',
-      subject: '',
-      date: ''
-    });
-  } catch (error: any) { // Use TypeScript type assertion if needed
-    console.error('Submission error:', error);
-    
-    // Improved error handling
-    const errorMessage = error.response?.data?.message 
-      || error.message 
-      || "Submission failed. Please try again.";
-
-    alert(errorMessage);
-  }
-};
-    
-//     if (response.status === 201) {
-//       alert('Request submitted successfully!');
-//       // Reset form
-//       setFormData({
-//         fullName: '',
-//         email: '',
-//         grade: '',
-//         subject: '',
-//         date: ''
-//       });
-//     }
-//   } catch (error) {
-//     console.error('Submission error:', error);
-//     alert('Failed to submit request. Please try again.');
-//   }
-// };
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await api.post('/requests/student', {
+        fullName: formData.fullName,
+        email: formData.email,
+        grade: formData.grade,
+        subject: formData.subject,
+        dob: formData.dob,
+        board: formData.board
+      });
+      alert('Application submitted successfully!');
+      // Reset form
+      setFormData({
+        fullName: '',
+        email: '',
+        grade: '',
+        subject: '',
+        dob: '',
+        board: ''
+      });
+    } catch (error: any) {
+      console.error('Submission error:', error);
+      const errorMessage = error.response?.data?.message 
+        || error.message 
+        || "Submission failed. Please try again.";
+      alert(errorMessage);
+    }
+  };
 
   return (
     <div className="pt-24 px-6 bg-background min-h-screen">
@@ -236,18 +222,38 @@ const handleSubmit = async (e: React.FormEvent) => {
                 </select>
               </div>
 
-              <div>
+              {/* <div>
                 <label className="block text-sm font-medium text-text-primary mb-1">
-                  Preferred Date
+                  Date of Birth
                 </label>
                 <input
                   type="date"
-                  name="date"
-                  value={formData.date}
+                  name="dob"
+                  value={formData.dob}
                   onChange={handleInputChange}
                   className="w-full px-4 py-2 border border-card rounded-lg focus:outline-none focus:ring-2 focus:ring-navbar focus:border-transparent transition-all duration-300"
                   required
                 />
+              </div> */}
+
+              <div>
+                <label className="block text-sm font-medium text-text-primary mb-1">
+                  Board
+                </label>
+                <select
+                  name="board"
+                  value={formData.board}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2 border border-card rounded-lg focus:outline-none focus:ring-2 focus:ring-navbar focus:border-transparent transition-all duration-300"
+                  required
+                >
+                  <option value="">Select your board</option>
+                  {boards.map((board) => (
+                    <option key={board} value={board}>
+                      {board}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <button

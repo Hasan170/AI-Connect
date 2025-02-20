@@ -1,10 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Video, Mic, MicOff, VideoOff, MessageCircle, X, Send, Maximize, Minimize,
   Share, Users, Hand, Circle, Square, Type, Download, Phone, Circle as RecordIcon
 } from 'lucide-react';
 
 const Classroom = () => {
+  const navigate = useNavigate();
+
   // State management
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isVideoOn, setIsVideoOn] = useState(true);
@@ -84,10 +87,15 @@ const Classroom = () => {
     setNewMessage('');
   };
 
+  // Handle end class button click
+  const handleEndClass = () => {
+    navigate('/student-profile');
+  };
+
   return (
-    <div className="h-screen bg-background flex flex-col">
-      {/* Header */}
-      <div className="bg-navbar text-white px-6 py-3 flex justify-between items-center">
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Fixed Header */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-navbar text-white px-6 py-3 flex justify-between items-center">
         <div className="flex items-center gap-4">
           <h1 className="text-xl font-semibold">Mathematics Class</h1>
           <span className="text-sm bg-white/20 px-3 py-1 rounded-full">Dr. Smith</span>
@@ -103,15 +111,21 @@ const Classroom = () => {
               <Circle size={8} className="fill-red-400" /> Recording
             </span>
           )}
-          <button className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg flex items-center gap-2">
+          <button
+            onClick={handleEndClass}
+            className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg flex items-center gap-2"
+          >
             <Phone size={16} /> End Class
           </button>
         </div>
       </div>
 
-      <div className="flex-1 flex">
-        {/* Main Content */}
-        <div className="flex-1 flex flex-col p-4">
+      {/* Spacer to prevent content from going under fixed navbar */}
+      <div className="h-[60px]"></div>
+
+      {/* Main Content */}
+      <div className="flex-1 flex overflow-hidden">
+        <div className="flex-1 flex flex-col p-4 overflow-hidden">
           {/* Video Grid */}
           <div className="bg-white rounded-lg shadow-md p-4 mb-4 h-[30vh]">
             <div className="grid grid-cols-2 gap-4 h-full">
@@ -145,7 +159,7 @@ const Classroom = () => {
           </div>
 
           {/* Whiteboard */}
-          <div className="bg-white rounded-lg shadow-md p-4 flex-1 relative">
+          <div className="bg-white rounded-lg shadow-md p-4 flex-1 relative overflow-hidden">
             {/* Whiteboard Tools */}
             <div className="absolute left-4 top-4 bg-white shadow-lg rounded-lg p-2 flex flex-col gap-2">
               <button
@@ -201,7 +215,7 @@ const Classroom = () => {
         </div>
 
         {/* Participants & Chat Sidebar */}
-        <div className="w-80 bg-white border-l flex flex-col">
+        <div className="w-80 bg-white border-l flex flex-col overflow-hidden">
           {/* Participants Tab */}
           <div className="border-b">
             <button
@@ -234,7 +248,7 @@ const Classroom = () => {
               ))}
             </div>
           ) : (
-            <div className="flex-1 flex flex-col">
+            <div className="flex-1 flex flex-col overflow-hidden">
               <div className="flex-1 p-4 overflow-y-auto">
                 {messages.map((message, index) => (
                   <div key={index} className="mb-4">

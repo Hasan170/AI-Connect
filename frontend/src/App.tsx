@@ -2,18 +2,26 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+
+//main pages
 import Home from './pages/Home';
 import AboutUs from './pages/AboutUs';
 import HowItWorks from './pages/HowItWorks';
 import BecomeTutor from './pages/BecomeTutor';
 import BookClass from './pages/BookClass';
 import Login from './pages/Login';
+
+//sub pages
 import StudentProfile from './pages/StudentProfile';
 import TutorProfile from './pages/TutorProfile';
 import AdminDashboard from './pages/AdminDashboard';
+
+//admin pages
 import Students from './pages/admin/Students';
 import Teachers from './pages/admin/Teachers';
 import Resources from './pages/admin/Resources';
+
+//student pages
 import MyClasses from './pages/student/MyClasses';
 import Schedule from './pages/student/Schedule';
 import Assignments from './pages/student/Assignments';
@@ -21,12 +29,14 @@ import TeachersPage from './pages/student/Teachers';
 import ResourcesPage from './pages/student/Resources';
 import FeeDetails from './pages/student/FeeDetails';
 import Feedback from './pages/student/Feedback';
-import Classroom from './pages/student/Classroom'; 
+
+//tutor pages
+
 
 function App() {
   const location = useLocation();
   const showFooter = !['/admin-dashboard', '/student-profile', '/tutor-profile', '/admin/students', '/admin/teachers', '/admin/resources', '/admin/settings', 
-    '/student/classes', '/student/schedule', '/student/assignments', '/student/teachers', '/student/resources', '/student/fee-details', '/student/feedback', '/student/classroom/'
+    '/student/classes', '/student/schedule', '/student/assignments', '/student/teachers', '/student/resources', '/student/fee-details', '/student/feedback'
   ].includes(location.pathname);
 
   return (
@@ -53,7 +63,6 @@ function App() {
           <Route path="/student/resources" element={<ResourcesPage />} />
           <Route path="/student/fee-details" element={<FeeDetails />} />
           <Route path="/student/feedback" element={<Feedback />} /> 
-          <Route path="/student/classroom" element={<Classroom />} />
 
         </Routes>
       </main>

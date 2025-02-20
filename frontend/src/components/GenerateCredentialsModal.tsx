@@ -16,36 +16,60 @@ interface StudentBooking {
   email: string;
   grade: string;
   subject: string;
-  date: string;
+  dob: string;
+  board: string;
+}
+
+interface Teacher {
+  id: string;
+  name: string;
+  subject: string;
 }
 
 const GenerateCredentialsModal: React.FC<GenerateCredentialsModalProps> = ({ isOpen, onClose, student, onSuccess }) => {
   const [formData, setFormData] = useState({
-    name: student?.fullName || '',
-    age: '',
-    grade: student?.grade || '',
+    name: '',
+    email: '',
+    grade: '',
+    subject: '',
+    dob: '',
     board: '',
-    subjects: student?.subject || '',
-    email: student?.email || '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    teacherId: ''
   });
 
-    // Use useEffect to update formData when the student changes
-    useEffect(() => {
-      if (student) {
-        setFormData({
-          name: student.fullName || '',
-          age: '',
-          grade: student.grade || '',
-          board: '',
-          subjects: student.subject || '',
-          email: student.email || '',
-          password: '',
-          confirmPassword: ''
-        });
-      }
-    }, [student]); 
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (student) {
+      setFormData({
+        name: student.fullName || '',
+        email: student.email || '',
+        grade: student.grade || '',
+        subject: student.subject || '',
+        dob: student.dob || '',
+        board: student.board || '',
+        password: '',
+        confirmPassword: '',
+        teacherId: ''
+      });
+      fetchTeachers(student.subject);
+    }
+  }, [student]);
+
+  const fetchTeachers = async (subject: string) => {
+    try {
+      setLoading(true);
+      const response = await api.get(`/teachers?subject=${subject}`);
+      setTeachers(response.data);
+    } catch (error) {
+      console.error('Error fetching teachers:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -55,35 +79,39 @@ const GenerateCredentialsModal: React.FC<GenerateCredentialsModalProps> = ({ isO
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Add password validation
     if (formData.password !== formData.confirmPassword) {
       alert("Passwords don't match!");
       return;
     }
 
-    const payload = {
-      requestId: student?.id,
-      name: formData.name,
-      age: formData.age,
-      grade: formData.grade,
-      board: formData.board,
-      subjects: formData.subjects,
-      email: formData.email,
-      password: formData.password
-    };
+    if (!formData.teacherId) {
+      alert("Please assign a teacher!");
+      return;
+    }
 
     try {
-      console.log("🚀 Sending Payload:", payload); // Debugging log
-      await api.post('/student/create', payload);
+      const payload = {
+        requestId: student?.id,
+        name: formData.name,
+        email: formData.email,
+        grade: formData.grade,
+        subject: formData.subject,
+        dob: formData.dob,
+        board: formData.board,
+        password: formData.password,
+        teacherId: formData.teacherId
+      };
+
+      await api.post('/students/create', payload);
       alert('Student credentials created successfully!');
-      // Inform the parent that this teacher's request is processed
       if (student) {
         onSuccess(student.id);
       }
       onClose();
     } catch (err: unknown) {
       const error = err as AxiosError;
-      alert('Failed to create student. Check console for details.');
+      console.error('Error creating student:', error);
+      alert('Failed to create student. Please try again.');
     }
   };
 
@@ -98,6 +126,7 @@ const GenerateCredentialsModal: React.FC<GenerateCredentialsModalProps> = ({ isO
             <X size={24} />
           </button>
         </div>
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
@@ -108,52 +137,10 @@ const GenerateCredentialsModal: React.FC<GenerateCredentialsModalProps> = ({ isO
               onChange={handleInputChange}
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-navbar"
               required
+              readOnly
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Age</label>
-            <input
-              type="number"
-              name="age"
-              value={formData.age}
-              onChange={handleInputChange}
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-navbar"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Grade</label>
-            <input
-              type="text"
-              name="grade"
-              value={formData.grade}
-              onChange={handleInputChange}
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-navbar"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Board</label>
-            <input
-              type="text"
-              name="board"
-              value={formData.board}
-              onChange={handleInputChange}
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-navbar"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Subjects</label>
-            <input
-              type="text"
-              name="subjects"
-              value={formData.subjects}
-              onChange={handleInputChange}
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-navbar"
-              required
-            />
-          </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
             <input
@@ -163,8 +150,55 @@ const GenerateCredentialsModal: React.FC<GenerateCredentialsModalProps> = ({ isO
               onChange={handleInputChange}
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-navbar"
               required
+              readOnly
             />
           </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Grade</label>
+              <input
+                type="text"
+                name="grade"
+                value={formData.grade}
+                onChange={handleInputChange}
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-navbar"
+                required
+                readOnly
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Board</label>
+              <input
+                type="text"
+                name="board"
+                value={formData.board}
+                onChange={handleInputChange}
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-navbar"
+                required
+                readOnly
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Assign Teacher</label>
+            <select
+              name="teacherId"
+              value={formData.teacherId}
+              onChange={handleInputChange}
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-navbar"
+              required
+            >
+              <option value="">Select a teacher</option>
+              {teachers.map((teacher) => (
+                <option key={teacher.id} value={teacher.id}>
+                  {teacher.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
             <input
@@ -174,8 +208,10 @@ const GenerateCredentialsModal: React.FC<GenerateCredentialsModalProps> = ({ isO
               onChange={handleInputChange}
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-navbar"
               required
+              minLength={6}
             />
           </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
             <input
@@ -185,13 +221,16 @@ const GenerateCredentialsModal: React.FC<GenerateCredentialsModalProps> = ({ isO
               onChange={handleInputChange}
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-navbar"
               required
+              minLength={6}
             />
           </div>
+
           <button
             type="submit"
             className="w-full bg-navbar text-white py-2 rounded-lg hover:bg-opacity-90 transition-all duration-300"
+            disabled={loading}
           >
-            Generate
+            {loading ? 'Loading...' : 'Generate Credentials'}
           </button>
         </form>
       </div>
