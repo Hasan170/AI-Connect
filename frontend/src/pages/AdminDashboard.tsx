@@ -11,6 +11,60 @@ interface ClassRequest {
   status: 'pending' | 'approved' | 'rejected';
 }
 
+interface TimeSelectionModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  request: ClassRequest | null;
+  onSchedule: (id: string, time: string) => void;
+}
+
+const TimeSelectionModal: React.FC<TimeSelectionModalProps> = ({ isOpen, onClose, request, onSchedule }) => {
+  const [selectedTime, setSelectedTime] = useState('');
+
+  if (!isOpen || !request) return null;
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSchedule(request.id, selectedTime);
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+        <h3 className="text-xl font-semibold mb-4">Select Time for {request.name}'s Class</h3>
+        <form onSubmit={handleSubmit}>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Time</label>
+            <input
+              type="time"
+              value={selectedTime}
+              onChange={(e) => setSelectedTime(e.target.value)}
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-navbar"
+              required
+            />
+          </div>
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-gray-600 hover:text-gray-800"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-navbar text-white rounded-lg hover:bg-opacity-90"
+            >
+              Schedule Class
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 export default function AdminDashboard() {
   const stats = [
     { title: 'Total Users', value: '1,234', icon: <Users className="w-6 h-6" />, change: '+12%', bgColor: 'bg-blue-50' },
@@ -22,16 +76,20 @@ export default function AdminDashboard() {
   const [studentRequests, setStudentRequests] = useState<ClassRequest[]>([
     { id: '1', name: 'John Doe', subject: 'Math', date: '2024-01-20', time: '10:00', status: 'pending' },
   ]);
-  const [tutorRequests, setTutorRequests] = useState<ClassRequest[]>([
-    { id: '2', name: 'Jane Smith', subject: 'English', date: '2024-02-10', time: '14:00', status: 'pending' },
-  ]);
 
   const [scheduledClasses, setScheduledClasses] = useState<ClassRequest[]>([]);
+  const [isTimeModalOpen, setIsTimeModalOpen] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState<ClassRequest | null>(null);
 
-  const approveStudent = (id: string) => {
+  const approveStudent = (request: ClassRequest) => {
+    setSelectedRequest(request);
+    setIsTimeModalOpen(true);
+  };
+
+  const handleScheduleClass = (id: string, time: string) => {
     setStudentRequests((prev) => {
       const updated = prev.map((req): ClassRequest =>
-        req.id === id ? { ...req, status: 'approved' } : req
+        req.id === id ? { ...req, status: 'approved', time } : req
       );
       const approvedRequest = updated.find((req) => req.id === id);
       if (approvedRequest && !scheduledClasses.some((sc) => sc.id === approvedRequest.id)) {
@@ -43,23 +101,6 @@ export default function AdminDashboard() {
 
   const rejectStudent = (id: string) => {
     setStudentRequests((prev) => prev.filter((req) => req.id !== id));
-  };
-
-  const approveTutor = (id: string) => {
-    setTutorRequests((prev) => {
-      const updated = prev.map((req): ClassRequest =>
-        req.id === id ? { ...req, status: 'approved' } : req
-      );
-      const approvedRequest = updated.find((req) => req.id === id);
-      if (approvedRequest && !scheduledClasses.some((sc) => sc.id === approvedRequest.id)) {
-        setScheduledClasses((prevSched) => [...prevSched, approvedRequest]);
-      }
-      return updated.filter((req) => req.id !== id);
-    });
-  };
-
-  const rejectTutor = (id: string) => {
-    setTutorRequests((prev) => prev.filter((req) => req.id !== id));
   };
 
   return (
@@ -92,67 +133,42 @@ export default function AdminDashboard() {
             ))}
           </div>
 
-          {/* Requests Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Student Requests */}
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold text-text-primary mb-4">Student Class Requests</h2>
-              {studentRequests.length === 0 ? (
-                <p className="text-gray-500">No class requests</p>
-              ) : (
-                <div className="space-y-4">
-                  {studentRequests.map((req) => (
-                    <div key={req.id} className="bg-gray-50 p-4 rounded-lg flex justify-between items-center">
-                      <div>
-                        <p className="font-medium">{req.name}</p>
-                        <p className="text-gray-500">{req.subject}</p>
-                        <p className="text-gray-500">{req.date} at {req.time}</p>
-                      </div>
-                      <div className="flex gap-2">
-                        <button className="text-green-600 hover:text-green-800" onClick={() => approveStudent(req.id)}>
-                          <Check size={20} />
-                        </button>
-                        <button className="text-red-600 hover:text-red-800" onClick={() => rejectStudent(req.id)}>
-                          <X size={20} />
-                        </button>
-                      </div>
+          {/* Student Requests */}
+          <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+            <h2 className="text-xl font-semibold text-text-primary mb-4">Student Class Requests</h2>
+            {studentRequests.length === 0 ? (
+              <p className="text-gray-500">No class requests</p>
+            ) : (
+              <div className="space-y-4">
+                {studentRequests.map((req) => (
+                  <div key={req.id} className="bg-gray-50 p-4 rounded-lg flex justify-between items-center">
+                    <div>
+                      <p className="font-medium">{req.name}</p>
+                      <p className="text-gray-500">{req.subject}</p>
+                      <p className="text-gray-500">{req.date}</p>
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Tutor Requests */}
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold text-text-primary mb-4">Tutor Class Requests</h2>
-              {tutorRequests.length === 0 ? (
-                <p className="text-gray-500">No class requests</p>
-              ) : (
-                <div className="space-y-4">
-                  {tutorRequests.map((req) => (
-                    <div key={req.id} className="bg-gray-50 p-4 rounded-lg flex justify-between items-center">
-                      <div>
-                        <p className="font-medium">{req.name}</p>
-                        <p className="text-gray-500">{req.subject}</p>
-                        <p className="text-gray-500">{req.date} at {req.time}</p>
-                      </div>
-                      <div className="flex gap-2">
-                        <button className="text-green-600 hover:text-green-800" onClick={() => approveTutor(req.id)}>
-                          <Check size={20} />
-                        </button>
-                        <button className="text-red-600 hover:text-red-800" onClick={() => rejectTutor(req.id)}>
-                          <X size={20} />
-                        </button>
-                      </div>
+                    <div className="flex gap-2">
+                      <button 
+                        className="text-green-600 hover:text-green-800" 
+                        onClick={() => approveStudent(req)}
+                      >
+                        <Check size={20} />
+                      </button>
+                      <button 
+                        className="text-red-600 hover:text-red-800" 
+                        onClick={() => rejectStudent(req.id)}
+                      >
+                        <X size={20} />
+                      </button>
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Scheduled Classes */}
-          <div className="mt-6 bg-white p-6 rounded-lg shadow-md">
+          <div className="bg-white p-6 rounded-lg shadow-md">
             <h2 className="text-xl font-semibold text-text-primary mb-4">Scheduled Classes</h2>
             {scheduledClasses.length === 0 ? (
               <p className="text-gray-500">No scheduled classes</p>
@@ -170,6 +186,17 @@ export default function AdminDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Time Selection Modal */}
+      <TimeSelectionModal
+        isOpen={isTimeModalOpen}
+        onClose={() => {
+          setIsTimeModalOpen(false);
+          setSelectedRequest(null);
+        }}
+        request={selectedRequest}
+        onSchedule={handleScheduleClass}
+      />
     </div>
   );
 }

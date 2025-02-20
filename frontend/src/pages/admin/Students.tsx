@@ -10,8 +10,10 @@ interface StudentBooking {
   email: string;
   grade: string;
   subject: string;
-  date: string;
-  password?: string; 
+  board: string;
+  dob: string;
+  teacher?: string;
+  password?: string;
 }
 
 const Students = () => {
@@ -33,7 +35,9 @@ const Students = () => {
           email: request.email,
           grade: request.grade,
           subject: request.subject,
-          date: new Date(request.preferredDate).toLocaleDateString()
+          board: request.board,
+          dob: new Date(request.dob).toLocaleDateString(),
+          teacher: request.teacher
         }));
         setStudents(studentRequests);
         setLoading(false);
@@ -55,29 +59,6 @@ const Students = () => {
   });
 
   const subjects = [...new Set(students.map(student => student.subject))];
-
-  // const handleGenerateCredentials = async (studentData: StudentBooking) => {
-  //   try {
-  //     // First create student credentials s
-  //     await api.post('/api/students/create', {
-  //       name: studentData.fullName,
-  //       email: studentData.email,
-  //       grade: studentData.grade,
-  //       password: "TEMPORARY_PASSWORD" // You'll want to generate this
-  //     });
-  
-  //     // Then delete the request
-  //     await api.delete(`/requests/student/${studentData.id}`);
-      
-  //     // Update local state
-  //     setStudents(prev => prev.filter(s => s.id !== studentData.id));
-  //     setIsModalOpen(false);
-  //     alert('Credentials generated successfully!');
-  //   } catch (err) {
-  //     console.error('Generation error:', err);
-  //     alert('Failed to generate credentials. Please check console for details.');
-  //   }
-  // };
 
   return (
     <div className="flex">
@@ -139,10 +120,16 @@ const Students = () => {
                       Grade
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Subject
+                      Board
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Date
+                      Subject
+                    </th>
+                    {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Date of Birth
+                    </th> */}
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Teacher
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Actions
@@ -152,7 +139,7 @@ const Students = () => {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {loading ? (
                     <tr>
-                      <td colSpan={6} className="px-6 py-4 text-center">
+                      <td colSpan={8} className="px-6 py-4 text-center">
                         <div className="flex justify-center">
                           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-navbar"></div>
                         </div>
@@ -160,13 +147,13 @@ const Students = () => {
                     </tr>
                   ) : error ? (
                     <tr>
-                      <td colSpan={6} className="px-6 py-4 text-center text-red-500">
+                      <td colSpan={8} className="px-6 py-4 text-center text-red-500">
                         {error}
                       </td>
                     </tr>
                   ) : filteredStudents.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                      <td colSpan={8} className="px-6 py-4 text-center text-gray-500">
                         No student requests found
                       </td>
                     </tr>
@@ -176,12 +163,14 @@ const Students = () => {
                         <td className="px-6 py-4 whitespace-nowrap">{student.fullName}</td>
                         <td className="px-6 py-4 whitespace-nowrap">{student.email}</td>
                         <td className="px-6 py-4 whitespace-nowrap">{student.grade}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">{student.board}</td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
                             {student.subject}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">{student.date}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">{student.dob}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">{student.teacher || 'Not Assigned'}</td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <button
                             onClick={() => {
@@ -210,14 +199,6 @@ const Students = () => {
           setStudents(prev => prev.filter(t => t.id !== studentId));
           setSelectedStudent(null);
         }}
-        // onSubmit={async (credentials) => {
-        //   if (selectedStudent) {
-        //     await handleGenerateCredentials({
-        //       ...selectedStudent,
-        //       ...credentials
-        //     });
-        //   }
-        // }}
       />
     </div>
   );
