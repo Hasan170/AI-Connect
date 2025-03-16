@@ -36,7 +36,12 @@ const getStudentDetails = async (req, res) => {
 // Create student credentials & details (Admin Action)
 const createStudent = async (req, res) => {
   try {
-    const { requestId, name, age, grade, board, subjects, email,  password } = req.body;
+    const { requestId, name, grade, board, subjects, email,  password } = req.body;
+
+      // Ensure subjects is properly formatted
+      const subjectsArray = Array.isArray(subjects)
+      ? subjects.map(({ subject, teacherId }) => ({ subject, teacherId })) // ✅ Extract correctly
+      : [];
 
     // Save student credentials (for login)
     const studentCredentials = new StudentCredentials({
@@ -50,13 +55,12 @@ const createStudent = async (req, res) => {
       name,
       grade,
       board,
-      age,
-      subjects
+      subjects: subjectsArray
     });
 
     // Save both documents in MongoDB
-    await studentCredentials.save();
     await studentDetails.save();
+    await studentCredentials.save();
 
     if (!requestId) {
       console.log("❌ Missing requestId! Received:", req.body); // Debugging log

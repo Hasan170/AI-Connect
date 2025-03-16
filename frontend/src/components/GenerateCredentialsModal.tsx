@@ -21,7 +21,7 @@ interface StudentBooking {
 }
 
 interface Teacher {
-  id: string;
+  _id: string;
   name: string;
   subject: string;
 }
@@ -32,7 +32,6 @@ const GenerateCredentialsModal: React.FC<GenerateCredentialsModalProps> = ({ isO
     email: '',
     grade: '',
     subject: '',
-    dob: '',
     board: '',
     password: '',
     confirmPassword: '',
@@ -49,20 +48,19 @@ const GenerateCredentialsModal: React.FC<GenerateCredentialsModalProps> = ({ isO
         email: student.email || '',
         grade: student.grade || '',
         subject: student.subject || '',
-        dob: student.dob || '',
         board: student.board || '',
         password: '',
         confirmPassword: '',
         teacherId: ''
       });
-      fetchTeachers(student.subject);
+      fetchTeachers();
     }
   }, [student]);
 
-  const fetchTeachers = async (subject: string) => {
+  const fetchTeachers = async () => {
     try {
       setLoading(true);
-      const response = await api.get(`/teachers?subject=${subject}`);
+      const response = await api.get('/teacher/details'); 
       setTeachers(response.data);
     } catch (error) {
       console.error('Error fetching teachers:', error);
@@ -95,14 +93,18 @@ const GenerateCredentialsModal: React.FC<GenerateCredentialsModalProps> = ({ isO
         name: formData.name,
         email: formData.email,
         grade: formData.grade,
-        subject: formData.subject,
-        dob: formData.dob,
         board: formData.board,
         password: formData.password,
-        teacherId: formData.teacherId
+        subjects: [
+          {
+            subject: formData.subject,
+            teacherId: formData.teacherId
+          }
+        ]
       };
+      console.log('Payload:', payload);
 
-      await api.post('/students/create', payload);
+      await api.post('/student/create', payload);
       alert('Student credentials created successfully!');
       if (student) {
         onSuccess(student.id);
@@ -189,14 +191,20 @@ const GenerateCredentialsModal: React.FC<GenerateCredentialsModalProps> = ({ isO
               onChange={handleInputChange}
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-navbar"
               required
+              disabled={loading} // Disable while fetching data
             >
-              <option value="">Select a teacher</option>
-              {teachers.map((teacher) => (
-                <option key={teacher.id} value={teacher.id}>
-                  {teacher.name}
-                </option>
-              ))}
+              <option value="">{loading ? "Loading teachers..." : "Select a teacher"}</option>
+              {teachers.length > 0 ? (
+                teachers.map((teacher) => (
+                  <option key={teacher._id} value={teacher._id}>
+                    {teacher.name}
+                  </option>
+                ))
+              ) : (
+                !loading && <option disabled>No teachers available</option>
+              )}
             </select>
+
           </div>
 
           <div>
@@ -208,7 +216,7 @@ const GenerateCredentialsModal: React.FC<GenerateCredentialsModalProps> = ({ isO
               onChange={handleInputChange}
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-navbar"
               required
-              minLength={6}
+              // minLength={6}
             />
           </div>
 
@@ -221,7 +229,7 @@ const GenerateCredentialsModal: React.FC<GenerateCredentialsModalProps> = ({ isO
               onChange={handleInputChange}
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-navbar"
               required
-              minLength={6}
+              // minLength={6}
             />
           </div>
 

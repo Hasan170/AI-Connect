@@ -1,7 +1,9 @@
-const StudentRequest = require('../models/StudentRequest');
+const mongoose = require('mongoose');
+const StudentRequest = require('../models/StudentRequest'); 
 const TeacherRequest = require('../models/TeacherRequest');
 const TeacherDetails = require('../models/TeacherDetails');
 const StudentDetails = require('../models/StudentDetails');
+const ClassRequest = require('../models/ClassRequest');
 
 // Handle student class requests
 const createStudentRequest = async (req, res) => {
@@ -35,7 +37,7 @@ const createStudentRequest = async (req, res) => {
       email: normalizedEmail,
       grade: req.body.grade,
       subject: req.body.subject,
-      preferredDate: req.body.preferredDate,
+      board: req.body.board,
     });
 
     await newRequest.save();
@@ -120,8 +122,142 @@ const getPendingRequests = async (req, res) => {
   }
 };
 
-module.exports = {
-  createStudentRequest,
-  createTeacherRequest,
-  getPendingRequests
+const createClassRequest = async (req, res) => {
+  try {
+    // const { studentId, subject, requestedDate, teacherId } = req.body;
+
+    // // Add proper validation
+    // if (!studentId || !subject || !requestedDate || !teacherId) {
+    //   return res.status(400).json({ message: 'All fields are required' });
+    // }
+
+    // // Verify student exists
+    // const student = await StudentDetails.findById(studentId);
+    // if (!student) {
+    //   return res.status(404).json({ message: 'Student not found' });
+    // }
+
+    // // Verify subject-teacher assignment
+    // const hasSubject = student.subjects.some(s => 
+    //   s.subject === subject && s.teacherId.equals(teacherId)
+    // );
+    
+    // if (!hasSubject) {
+    //   return res.status(400).json({ 
+    //     message: 'Student not enrolled in this subject with the specified teacher' 
+    //   });
+    // }
+    // Add request logging
+    console.log('Incoming request body:', req.body);
+
+    const { studentId, subject, requestedDate, teacherId } = req.body;
+    
+    if (!mongoose.Types.ObjectId.isValid(studentId)) {
+      return res.status(400).json({ message: 'Invalid student ID format' });
+    }
+    
+    if (!mongoose.Types.ObjectId.isValid(teacherId)) {
+      return res.status(400).json({ message: 'Invalid teacher ID format' });
+    }
+
+    // Convert to ObjectID for comparison
+    const teacherObjectId = new mongoose.Types.ObjectId(teacherId);
+
+    const student = await StudentDetails.findById(studentId)
+      .populate('subjects.teacherId', '_id');
+
+    const hasSubject = student.subjects.some(s => 
+      s.subject === subject && 
+      s.teacherId._id.equals(teacherObjectId) // Compare ObjectIDs
+    );
+
+    // Create request
+    const newRequest = await ClassRequest.create({
+      studentId,
+      subject,
+      teacherId, // Add teacherId to the request
+      requestedDate: new Date(requestedDate),
+      status: 'pending'
+    });
+
+    res.status(201).json(newRequest);
+  } catch (error) {
+    console.error('Class request error:', error);
+    res.status(500).json({ 
+      message: 'Internal server error',
+      error: error.message 
+    });
+  }
 };
+
+// const createClassRequest = async (req, res) => {
+//   try {
+//     const { studentId, subject, requestedDate } = req.body;
+
+//     // Add validation for all required fields
+//     if (!studentId || !subject || !requestedDate || !teacherId) {
+//       return res.status(400).json({ message: 'Missing required fields' });
+//     }
+    
+//     // Verify student has this subject with assigned teacher
+//     // const student = await StudentDetails.findById(studentId)
+//     //   .populate('subjects.teacherId');
+
+//     const student = await StudentDetails.findById(studentId)
+//     .populate({
+//       path: 'subjects.teacherId',
+//       model: 'TeacherDetails' // Match your teacher model name
+//     });
+    
+//     const subjectData = student.subjects.find(s => s.subject === subject);
+//     if (!subjectData) {
+//       return res.status(400).json({ message: 'Student not enrolled in this subject' });
+//     }
+
+//     // Validate date
+//     const requestDate = new Date(requestedDate);
+//     if (isNaN(requestDate.getTime())) {
+//       return res.status(400).json({ message: 'Invalid date format' });
+//     }
+
+//     const newRequest = await ClassRequest.create({
+//       studentId,
+//       subject,
+//       requestedDate: new Date(requestedDate),
+//       status: 'pending'
+//     });
+
+//     res.status(201).json(newRequest);
+//   } catch (error) {
+//     res.status(500).json({
+//       message: 'Internal server error', 
+//       message: error.message 
+//     });
+//   }
+// };
+
+const getPendingClassRequests = async (req, res) => {
+  try {
+    const requests = await ClassRequest.find({ status: 'pending' })
+      .populate('studentId', 'name email grade board')
+      .populate('teacherId', 'name'); // Add this line
+      
+    res.json(requests);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const getStudentClassRequests = async (req, res) => {
+  try {
+    const requests = await ClassRequest.find({
+      studentId: req.params.studentId
+    });
+    res.json(requests);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = {createStudentRequest,createTeacherRequest,getPendingRequests, 
+  createClassRequest, getPendingClassRequests, getStudentClassRequests};

@@ -8,7 +8,6 @@ const BookClass = () => {
     email: '',
     grade: '',
     subject: '',
-    dob: '',
     board: ''
   });
 
@@ -78,7 +77,6 @@ const BookClass = () => {
         email: formData.email,
         grade: formData.grade,
         subject: formData.subject,
-        dob: formData.dob,
         board: formData.board
       });
       alert('Application submitted successfully!');
@@ -88,7 +86,6 @@ const BookClass = () => {
         email: '',
         grade: '',
         subject: '',
-        dob: '',
         board: ''
       });
     } catch (error: any) {
@@ -221,21 +218,6 @@ const BookClass = () => {
                   ))}
                 </select>
               </div>
-
-              {/* <div>
-                <label className="block text-sm font-medium text-text-primary mb-1">
-                  Date of Birth
-                </label>
-                <input
-                  type="date"
-                  name="dob"
-                  value={formData.dob}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-card rounded-lg focus:outline-none focus:ring-2 focus:ring-navbar focus:border-transparent transition-all duration-300"
-                  required
-                />
-              </div> */}
-
               <div>
                 <label className="block text-sm font-medium text-text-primary mb-1">
                   Board

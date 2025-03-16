@@ -6,6 +6,7 @@ import api from '../api';
 import StudentSidebar from '../components/StudentSidebar';
 import Notebook from '../components/Notebook';
 import ScheduleClassModal from '../components/ScheduleClassModal';
+import { ClassRequest, ScheduledClass, StudentDetails } from '../types';
 
 interface ProfileData {
   name: string;
@@ -15,12 +16,13 @@ interface ProfileData {
 }
 
 interface ClassData {
-  id?: string;
+  id: string;
   subject: string;
-  status: 'scheduled' | 'not-scheduled';
+  status: 'scheduled' | 'pending' | 'not-scheduled';
+  date?: Date;
   time?: string;
   tutor?: string;
-  date?: string;
+  // studentId?: string;
 }
 
 const StudentProfile = () => {
@@ -29,14 +31,22 @@ const StudentProfile = () => {
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [isRescheduleModalOpen, setIsRescheduleModalOpen] = useState(false);
   const [selectedClass, setSelectedClass] = useState<ClassData | null>(null);
+  const [enrolledSubjects, setEnrolledSubjects] = useState<string[]>([]);
+  const [classRequests, setClassRequests] = useState<ClassData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [profileData, setProfileData] = useState<ProfileData>({
     name: '',
     grade: '',
     schoolBoard: '',
     dob: '',
   });
-
   const [subjects, setSubjects] = useState<string[]>([]);
+
+
+  // Replace the classesData array with state
+  const [classes, setClasses] = useState<ClassData[]>([]);
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -51,20 +61,85 @@ const StudentProfile = () => {
         const response = await api.get(`/student/details/${email}`);
         const student = response.data;
 
+        // Extract enrolled subjects
+        const subjects = student.subjects.map((s: any) => s.subject);
+        setEnrolledSubjects(subjects);
+
         setProfileData({
           name: student.name,
           grade: student.grade,
           schoolBoard: student.schoolBoard,
           dob: student.dateOfBirth,
         });
-        setSubjects(student.subjects.split(', '));
+
+        // Set subjects for display
+        setSubjects(subjects);
+
+        // Fetch class requests and scheduled classes
+        const requestsRes = await api.get(`/requests/student/${student._id}`);
+        const classesRes = await api.get(`/classes/student/${student._id}`);
+
+        // Merge data for display
+        const mergedClasses = subjects.map((subject: any) => {
+          const scheduled = classesRes.data.find((c: any) => c.subject === subject);
+          const request = requestsRes.data.find((r: any) => r.subject === subject);
+
+          return {
+            subject,
+            status: scheduled ? 'scheduled' : request?.status || 'not-scheduled',
+            time: scheduled?.time,
+            date: scheduled?.date,
+            tutor: scheduled?.teacherId?.name,
+            id: scheduled?._id || request?._id
+          };
+        });
+
+        setProfileData({
+          name: student.name,
+          grade: student.grade,
+          schoolBoard: student.schoolBoard,
+          dob: student.dateOfBirth,
+        });
+        // setSubjects(student.subjects.split(', '));
+        setSubjects(student.subjects.map((s: any) => s.subject));
+        setClassRequests(mergedClasses);
       } catch (error) {
-        console.error('Error fetching student details:', error);
-        alert('Failed to fetch student details. Please try again.');
+        console.error('Error fetching data:', error);
+        alert('Failed to load student data');
+      }
+      finally {
+        setLoading(false);
+      }
+    };
+
+    const fetchScheduledClasses = async () => {
+      try {
+        setLoading(true);
+        setError('');
+        const email = localStorage.getItem('studentEmail');
+        if (!email) return;
+  
+        // First get student details to get ID
+        const studentRes = await api.get(`/student/details/${email}`);
+        const studentId = studentRes.data._id;
+        
+        // Then get scheduled classes
+        const classesRes = await api.get(`/classes/student/${studentId}`);
+        setClasses(classesRes.data.map((cls: { _id: any; subject: any; status: any; date: string | number | Date; time: any; teacherId: { name: any; }; }) => ({
+          id: cls._id,
+          subject: cls.subject,
+          status: cls.status,
+          date: new Date(cls.date),
+          time: cls.time,
+          tutor: cls.teacherId?.name // Assuming populated teacher data
+        })));
+      } catch (error) {
+        console.error('Error fetching classes:', error);
       }
     };
 
     fetchStudentDetails();
+    fetchScheduledClasses();
   }, [navigate]);
 
   const chartData = {
@@ -101,31 +176,43 @@ const StudentProfile = () => {
     }
   };
 
-  const classesData: ClassData[] = [
-    {
-      subject: 'Math',
-      status: 'scheduled',
-      time: 'Today, 10:00 AM',
-      tutor: 'Dr. Smith'
-    },
-    {
-      subject: 'Science',
-      status: 'not-scheduled'
-    },
-    {
-      subject: 'English',
-      status: 'not-scheduled'
-    }
-  ];
-
   const handleEditSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsEditModalOpen(false);
   };
 
-  const handleScheduleClass = (classItem: ClassData) => {
-    setSelectedClass(classItem);
-    setIsScheduleModalOpen(true);
+  const handleScheduleClass = async (classItem: ClassData, selectedDate: Date) => {
+    try {
+      const studentRes = await api.get(`/student/details/${localStorage.getItem('studentEmail')}`);
+      const studentId = studentRes.data._id;
+      
+      const studentDetails = await api.get(`/student/details/${localStorage.getItem('studentEmail')}`);
+      const subjectData = studentDetails.data.subjects.find((s: any) => s.subject === classItem.subject);
+      
+      if (!subjectData?.teacherId) {
+        throw new Error('No teacher assigned for this subject');
+      }
+  
+      // Convert teacherId to string explicitly
+      const teacherId = subjectData.teacherId.toString();
+  
+      await api.post('/requests/class', {
+        studentId,
+        subject: classItem.subject,
+        requestedDate: selectedDate.toISOString(),
+        teacherId // Now sending as string
+      });
+  
+      // Update UI state
+      setClassRequests(prev => prev.map(cls => 
+        cls.subject === classItem.subject 
+          ? { ...cls, status: 'pending' }
+          : cls
+      ));
+    } catch (error: any) {
+      console.error('Error details:', error.response?.data);
+      alert(`Error: ${error.response?.data?.message || error.message}`);
+    }
   };
 
   const handleRescheduleClass = (classItem: ClassData) => {
@@ -133,6 +220,7 @@ const StudentProfile = () => {
     setIsRescheduleModalOpen(true);
   };
 
+  
   return (
     <div className="flex">
       <StudentSidebar onNotebookClick={() => setIsNotebookOpen(true)} />
@@ -182,14 +270,18 @@ const StudentProfile = () => {
                 <div>
                   <p className="text-sm text-gray-500">Subjects</p>
                   <div className="flex flex-wrap gap-2 mt-1">
-                    {['Math', 'Science', 'English'].map((subject) => (
+                  {subjects.length > 0 ? (
+                    subjects.map((subject) => (
                       <span
                         key={subject}
                         className="bg-card px-3 py-1 rounded-full text-sm text-text-primary transform hover:scale-105 transition-all duration-300"
                       >
                         {subject}
                       </span>
-                    ))}
+                    ))
+                  ) : (
+                    <p className="text-gray-500">No subjects enrolled</p>
+                  )}
                   </div>
                 </div>
               </div>
@@ -204,15 +296,30 @@ const StudentProfile = () => {
             </div>
           </div>
 
-          {/* Enrolled Classes Section */}
-          <div className="grid md:grid-cols-3 gap-6 mb-6">
-            {classesData.map((classItem, index) => (
-              <div key={index} className="bg-white p-6 rounded-lg shadow-md transform hover:scale-[1.02] transition-all duration-300">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-text-primary">{classItem.subject}</h3>
-                  <Book className="text-navbar" size={20} />
-                </div>
-                {classItem.status === 'scheduled' ? (
+            {/* Enrolled Classes Section */}
+            {loading ? (
+              <div className="flex justify-center items-center h-screen">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-navbar"></div>
+              </div>
+            ) : error ? (
+              <div className="flex justify-center items-center h-screen">
+                <div className="text-red-500">{error}</div>
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-3 gap-6 mb-6">
+                {classRequests.map((classItem) => (
+                <div key={classItem.subject} className="bg-white p-6 rounded-lg shadow-md transform hover:scale-[1.02] transition-all duration-300">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-text-primary">
+                      {classItem.subject || 'No Subject'}
+                    </h3>
+              {/* {classRequests.map((classItem, index) => (
+                <div key={index} className="bg-white p-6 rounded-lg shadow-md transform hover:scale-[1.02] transition-all duration-300">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-text-primary">{classItem.subject}</h3> */}
+                    <Book className="text-navbar" size={20} />
+                  </div>
+                  {classItem.status === 'scheduled' ? (
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-green-600">
                       <CheckCircle size={16} />
@@ -239,20 +346,36 @@ const StudentProfile = () => {
                       </button>
                     </div>
                   </div>
+                ) : (classItem.status === 'pending' ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-yellow-600">
+                      <Clock size={16} />
+                      <p className="text-sm">Request Pending Approval</p>
+                    </div>
+                  </div>
                 ) : (
                   <>
                     <p className="text-gray-500 mb-4">No class scheduled</p>
-                    <button
-                      onClick={() => handleScheduleClass(classItem)}
-                      className="w-full bg-navbar text-white py-2 rounded-lg hover:bg-button-secondary transition-colors transform hover:scale-[1.02]"
-                    >
-                      Request Class
-                    </button>
+                      {/* <button
+                        onClick={() => handleScheduleClass(classItem, new Date())}
+                        className="w-full bg-navbar text-white py-2 rounded-lg hover:bg-button-secondary transition-colors transform hover:scale-[1.02]"
+                      >
+                        Request Class
+                      </button> */}
+                      <button
+                        onClick={() => {
+                          setSelectedClass(classItem);
+                          setIsScheduleModalOpen(true);
+                        }}
+                        className="w-full bg-navbar text-white py-2 rounded-lg hover:bg-button-secondary transition-colors transform hover:scale-[1.02]">
+                        Request Class
+                      </button>
                   </>
-                )}
+                ))}
               </div>
             ))}
           </div>
+            )}
 
           {/* Notifications Section */}
           <div className="bg-white p-6 rounded-lg shadow-md mb-6 transform hover:scale-[1.01] transition-all duration-300">
@@ -340,6 +463,35 @@ const StudentProfile = () => {
         )}
 
         {/* Schedule Class Modal */}
+        {/* <ScheduleClassModal
+          isOpen={isScheduleModalOpen}
+          onClose={() => {
+            setIsScheduleModalOpen(false);
+            setSelectedClass(null);
+          } }
+          isReschedule={false}
+          subject={selectedClass?.subject} onSubmit={function (date: Date, time?: string): void {
+            throw new Error('Function not implemented.');
+          } }        />  */}
+
+        {/* Reschedule Class Modal */}
+        {/* <ScheduleClassModal
+          isOpen={isRescheduleModalOpen}
+          onClose={() => {
+            setIsRescheduleModalOpen(false);
+            setSelectedClass(null);
+          } }
+          isReschedule={true}
+          subject={selectedClass?.subject} onSubmit={function (date: Date, time?: string): void {
+            throw new Error('Function not implemented.');
+          } }           rescheduleData={selectedClass ? {
+            id: selectedClass.id || '',
+            date: selectedClass.date || '',
+            time: selectedClass.time || ''
+          } : undefined}
+        /> */}
+
+        {/* Update both modals at the bottom of the file */}
         <ScheduleClassModal
           isOpen={isScheduleModalOpen}
           onClose={() => {
@@ -348,9 +500,13 @@ const StudentProfile = () => {
           }}
           isReschedule={false}
           subject={selectedClass?.subject}
+          onSubmit={async (date, time) => {
+            if (selectedClass) {
+              await handleScheduleClass(selectedClass, date);
+            }
+          }}
         />
 
-        {/* Reschedule Class Modal */}
         <ScheduleClassModal
           isOpen={isRescheduleModalOpen}
           onClose={() => {
@@ -361,9 +517,12 @@ const StudentProfile = () => {
           subject={selectedClass?.subject}
           rescheduleData={selectedClass ? {
             id: selectedClass.id || '',
-            date: selectedClass.date || '',
+            date: selectedClass.date?.toISOString() || '',
             time: selectedClass.time || ''
           } : undefined}
+          onSubmit={async (date, time) => {
+            // Implement reschedule logic here
+          }}
         />
 
         {isNotebookOpen && <Notebook onClose={() => setIsNotebookOpen(false)} />}

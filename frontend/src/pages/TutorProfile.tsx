@@ -22,6 +22,16 @@ const TutorProfile = () => {
     rating: 4.8
   });
 
+  interface ClassData {
+    id: string;
+    subject: string;
+    student: string;
+    date: string;
+    time: string;
+  }
+  
+  const [classes, setClasses] = useState<ClassData[]>([]);
+
   useEffect(() => {
     const fetchTeacherData = async () => {
       try {
@@ -45,8 +55,27 @@ const TutorProfile = () => {
         alert('Failed to load profile data');
       }
     };
-  
+    
+    const fetchClasses = async () => {
+      try {
+        const email = localStorage.getItem('teacherEmail');
+        const teacherRes = await api.get(`/teacher/details/${email}`);
+        const classesRes = await api.get(`/classes/teacher/${teacherRes.data._id}`);
+        
+        setClasses(classesRes.data.map((cls: { _id: any; subject: any; studentId: { name: any; }; date: string | number | Date; time: any; }) => ({
+          id: cls._id,
+          subject: cls.subject,
+          student: cls.studentId.name,
+          date: new Date(cls.date).toLocaleDateString(),
+          time: cls.time
+        })));
+      } catch (error) {
+        console.error('Error fetching classes:', error);
+      }
+    };
+
     fetchTeacherData();
+    fetchClasses();
   }, [navigate]);
 
   const formatTime = (seconds: number) => {
@@ -59,6 +88,10 @@ const TutorProfile = () => {
     e.preventDefault();
     setIsEditModalOpen(false);
   };
+
+  function startClass(id: string): void {
+    throw new Error('Function not implemented.');
+  }
 
   return (
     <div className="flex">
@@ -152,12 +185,14 @@ const TutorProfile = () => {
               <h2 className="text-xl font-semibold text-text-primary">Class Schedule</h2>
             </div>
             <div className="grid md:grid-cols-3 gap-4">
-              {[
+              {classes.map((class_) => (
+              <div key={class_.id} className="p-4 bg-background rounded-lg transform hover:scale-[1.02] transition-all duration-300">
+              {/* {[
                 { id: '1', time: '10:00 AM', subject: 'Physics', student: 'John Doe', date: '2023-10-01' },
                 { id: '2', time: '2:00 PM', subject: 'Mathematics', student: 'Jane Smith', date: '2023-10-01' },
                 { id: '3', time: '4:00 PM', subject: 'Physics', student: 'Mike Johnson', date: '2023-10-01' },
               ].map((class_, index) => (
-                <div key={index} className="p-4 bg-background rounded-lg transform hover:scale-[1.02] transition-all duration-300">
+                <div key={index} className="p-4 bg-background rounded-lg transform hover:scale-[1.02] transition-all duration-300"> */}
                   <div className="flex justify-between items-start mb-3">
                     <div>
                       <p className="font-medium">{class_.subject}</p>
@@ -166,8 +201,11 @@ const TutorProfile = () => {
                     <Book className="text-navbar" size={20} />
                   </div>
                   <p className="text-sm text-gray-600 mb-3">Student: {class_.student}</p>
-                  <div className="flex gap-2">
-                    <button className="w-full bg-navbar text-white py-2 rounded-lg hover:bg-button-secondary transition-colors transform hover:scale-[1.05]">
+                    <div className="flex gap-2">
+                    <button 
+                      className="w-full bg-navbar text-white py-2 rounded-lg hover:bg-button-secondary transition-colors transform hover:scale-[1.05]"
+                      onClick={() => startClass(class_.id)}
+                    >
                       Start Class
                     </button>
                   </div>
