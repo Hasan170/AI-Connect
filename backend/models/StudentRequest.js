@@ -5,7 +5,7 @@ const studentRequestSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true, lowercase: true }, // ✅ Always save as lowercase
   grade: { type: String, required: true },
   subject: { type: String, required: true },
-  preferredDate: { type: Date, required: true },
+  board: { type: String, required: true },
   status: { type: String, default: 'pending' },
   createdAt: { type: Date, default: Date.now }
 });

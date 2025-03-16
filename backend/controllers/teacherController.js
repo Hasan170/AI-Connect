@@ -31,7 +31,19 @@ const getTeacherDetails = async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
-};  
+};
+
+// Fetch all teachers (Admin Action)
+const getAllTeachers = async (req, res) => {
+  try {
+    const teachers = await TeacherDetails.find(); // Fetch all teachers
+    res.status(200).json(teachers);
+    console.log("Updated teachers state:", teachers);
+  } catch (err) {
+    console.error('Error fetching teachers:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
 
 // Create teacher credentials & details (Admin Action)
 const createTeacher = async (req, res) => {
@@ -72,4 +84,4 @@ const createTeacher = async (req, res) => {
   }
 };
 
-module.exports = { loginTeacher, getTeacherDetails, createTeacher };
+module.exports = { loginTeacher, getTeacherDetails, createTeacher, getAllTeachers };

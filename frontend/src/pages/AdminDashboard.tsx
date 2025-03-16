@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Users, BookOpen, DollarSign, Activity, Check, X } from 'lucide-react';
 import Sidebar from '../components/AdminSidebar';
+import api from '../api';
+import { ClassRequest as ClassRequestType, ScheduledClass, StudentDetails } from '../types';
 
 interface ClassRequest {
   id: string;
@@ -86,17 +88,52 @@ export default function AdminDashboard() {
     setIsTimeModalOpen(true);
   };
 
-  const handleScheduleClass = (id: string, time: string) => {
-    setStudentRequests((prev) => {
-      const updated = prev.map((req): ClassRequest =>
-        req.id === id ? { ...req, status: 'approved', time } : req
-      );
-      const approvedRequest = updated.find((req) => req.id === id);
-      if (approvedRequest && !scheduledClasses.some((sc) => sc.id === approvedRequest.id)) {
-        setScheduledClasses((prevSched) => [...prevSched, approvedRequest]);
+  // Update the useEffect for fetching requests
+  useEffect(() => {
+    const fetchRequests = async () => {
+      try {
+        const res = await api.get('/requests/class/pending');
+        setStudentRequests(res.data.map((req: { _id: any; studentId: { name: any; }; subject: any; requestedDate: string | number | Date; status: any; }) => ({
+          id: req._id,
+          name: req.studentId.name,
+          subject: req.subject,
+          date: new Date(req.requestedDate).toLocaleDateString(),
+          time: '',
+          status: req.status
+        })));
+      } catch (error) {
+        console.error('Error fetching requests:', error);
       }
-      return updated.filter((req) => req.id !== id);
-    });
+    };
+    fetchRequests();
+  }, []);
+
+  // const handleScheduleClass = (id: string, time: string) => {
+  //   setStudentRequests((prev) => {
+  //     const updated = prev.map((req): ClassRequest =>
+  //       req.id === id ? { ...req, status: 'approved', time } : req
+  //     );
+  //     const approvedRequest = updated.find((req) => req.id === id);
+  //     if (approvedRequest && !scheduledClasses.some((sc) => sc.id === approvedRequest.id)) {
+  //       setScheduledClasses((prevSched) => [...prevSched, approvedRequest]);
+  //     }
+  //     return updated.filter((req) => req.id !== id);
+  //   });
+  // };
+
+  // Update handleScheduleClass
+  const handleScheduleClass = async (id: string, time: string) => {
+    try {
+      await api.post('/classes/schedule', {
+        requestId: id,
+        time
+      });
+      
+      // Update local state
+      setStudentRequests(prev => prev.filter(req => req.id !== id));
+    } catch (error) {
+      console.error('Error scheduling class:', error);
+    }
   };
 
   const rejectStudent = (id: string) => {
