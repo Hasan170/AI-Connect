@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import ChatSupportWidget from './components/ChatSupportWidget';
 
 //main pages
 import Home from './pages/Home';
@@ -35,7 +36,7 @@ import Feedback from './pages/student/Feedback';
 
 function App() {
   const location = useLocation();
-  const showFooter = !['/admin-dashboard', '/student-profile', '/tutor-profile', '/admin/students', '/admin/teachers', '/admin/resources', '/admin/settings', 
+  const showFooter = !['/admin-dashboard', '/student-profile', '/tutor-profile', '/admin/students', '/admin/teachers', '/admin/resources', '/admin/settings',
     '/student/classes', '/student/schedule', '/student/assignments', '/student/teachers', '/student/resources', '/student/fee-details', '/student/feedback'
   ].includes(location.pathname);
 
@@ -62,11 +63,12 @@ function App() {
           <Route path="/student/teachers" element={<TeachersPage />}  />
           <Route path="/student/resources" element={<ResourcesPage />} />
           <Route path="/student/fee-details" element={<FeeDetails />} />
-          <Route path="/student/feedback" element={<Feedback />} /> 
+          <Route path="/student/feedback" element={<Feedback />} />
 
         </Routes>
       </main>
       {showFooter && <Footer />}
+      <ChatSupportWidget />
     </div>
   );
 }
