@@ -1,8 +1,8 @@
-import React from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ChatSupportWidget from './components/ChatSupportWidget';
+import AIChatWidget from './components/AIChatWidget';
 
 //main pages
 import Home from './pages/Home';
@@ -68,6 +68,7 @@ function App() {
         </Routes>
       </main>
       {showFooter && <Footer />}
+      <AIChatWidget />
       <ChatSupportWidget />
     </div>
   );
