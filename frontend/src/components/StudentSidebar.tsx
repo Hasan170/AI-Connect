@@ -1,6 +1,7 @@
 import React from 'react';
 import { User, BookOpen, Calendar, ClipboardList, Users, FileText, DollarSign, MessageSquare, LogOut, Book } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { FaBook } from "react-icons/fa";
 
 interface StudentSidebarProps {
   onNotebookClick: () => void;
@@ -14,6 +15,7 @@ const StudentSidebar: React.FC<StudentSidebarProps> = ({ onNotebookClick }) => {
     { title: 'Dashboard', icon: <User size={20} />, path: '/student-profile' },
     { title: 'My Classes', icon: <BookOpen size={20} />, path: '/student/classes' },
     { title: 'Calendar', icon: <Calendar size={20} />, path: '/student/schedule' },
+    { title: 'My Courses', icon: <FaBook size={20} />, path: '/student/MyCourses' },
     { title: 'Assignments', icon: <ClipboardList size={20} />, path: '/student/assignments' },
     { title: 'My Teachers', icon: <Users size={20} />, path: '/student/teachers' },
     { title: 'Resources', icon: <FileText size={20} />, path: '/student/resources' },

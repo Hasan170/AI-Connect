@@ -30,6 +30,7 @@ import TeachersPage from './pages/student/Teachers';
 import ResourcesPage from './pages/student/Resources';
 import FeeDetails from './pages/student/FeeDetails';
 import Feedback from './pages/student/Feedback';
+import MyCourses from './pages/student/MyCourses';
 
 // //tutor pages
 // import TutorStudents from './pages/tutro/TutorStudents';
@@ -42,7 +43,7 @@ import Feedback from './pages/student/Feedback';
 function App() {
   const location = useLocation();
   const showFooter = !['/admin-dashboard', '/student-profile', '/tutor-profile', '/admin/students', '/admin/teachers', '/admin/resources', '/admin/settings',
-    '/student/classes', '/student/schedule', '/student/assignments', '/student/teachers', '/student/resources', '/student/fee-details', '/student/feedback'
+    '/student/classes', '/student/schedule', '/student/assignments', '/student/teachers', '/student/resources', '/student/fee-details', '/student/feedback', '/student/MyCourses',
   ].includes(location.pathname);
 
   return (
@@ -69,6 +70,8 @@ function App() {
           <Route path="/student/resources" element={<ResourcesPage />} />
           <Route path="/student/fee-details" element={<FeeDetails />} />
           <Route path="/student/feedback" element={<Feedback />} />
+          <Route path="/student/MyCourses" element={<MyCourses />} />
+
 
         </Routes>
       </main>
