@@ -31,11 +31,11 @@ import ResourcesPage from './pages/student/Resources';
 import FeeDetails from './pages/student/FeeDetails';
 import Feedback from './pages/student/Feedback';
 
-//tutor pages
-import TutorStudents from './pages/tutro/TutorStudents';
-import TutorClasses from './pages/tutor/TutorClasses';
-import TutorSchedule from './pages/tutor/TutorSchedule';
-import TutorResources from './pages/tutor/TutorResources';
+// //tutor pages
+// import TutorStudents from './pages/tutro/TutorStudents';
+// import TutorClasses from './pages/tutor/TutorClasses';
+// import TutorSchedule from './pages/tutor/TutorSchedule';
+// import TutorResources from './pages/tutor/TutorResources';
 
 
 
