@@ -71,7 +71,7 @@ const MyCourses: React.FC = () => {
             id: '1',
             title: 'Advanced Mathematics',
             subject: 'Mathematics',
-            instructor: 'Dr. Sarah Johnson',
+            instructor: 'Dr. Ahmed',
             thumbnail: 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb',
             progress: 35,
             totalModules: 8,
