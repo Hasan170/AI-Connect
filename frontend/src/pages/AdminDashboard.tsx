@@ -108,31 +108,27 @@ export default function AdminDashboard() {
     fetchRequests();
   }, []);
 
-  // const handleScheduleClass = (id: string, time: string) => {
-  //   setStudentRequests((prev) => {
-  //     const updated = prev.map((req): ClassRequest =>
-  //       req.id === id ? { ...req, status: 'approved', time } : req
-  //     );
-  //     const approvedRequest = updated.find((req) => req.id === id);
-  //     if (approvedRequest && !scheduledClasses.some((sc) => sc.id === approvedRequest.id)) {
-  //       setScheduledClasses((prevSched) => [...prevSched, approvedRequest]);
-  //     }
-  //     return updated.filter((req) => req.id !== id);
-  //   });
-  // };
-
   // Update handleScheduleClass
   const handleScheduleClass = async (id: string, time: string) => {
     try {
-      await api.post('/classes/schedule', {
+      const response = await api.post('/classes/schedule', {
         requestId: id,
         time
       });
-      
-      // Update local state
-      setStudentRequests(prev => prev.filter(req => req.id !== id));
+
+      if (response.data && response.data.meetingLink) {
+        // Update local state only after successful response
+        setStudentRequests(prev => prev.filter(req => req.id !== id));
+        setScheduledClasses(prev => [...prev, response.data]);
+      }
     } catch (error) {
-      console.error('Error scheduling class:', error);
+      console.error('Scheduling error:', error);
+      if (error instanceof Error) {
+        alert(`Failed to schedule class: ${(error as any)?.response?.data?.message || error.message}`);
+      } else {
+        alert('Failed to schedule class: An unknown error occurred.');
+      }
+      // Optionally: Re-add the request to the UI if failed
     }
   };
 

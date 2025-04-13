@@ -89,9 +89,9 @@ const TutorProfile = () => {
     setIsEditModalOpen(false);
   };
 
-  function startClass(id: string): void {
-    throw new Error('Function not implemented.');
-  }
+  const startClass = (classId: string) => {
+    navigate(`/class/${classId}`);
+  };
 
   return (
     <div className="flex">

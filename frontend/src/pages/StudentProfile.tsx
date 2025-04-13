@@ -332,7 +332,7 @@ const StudentProfile = () => {
                     <p className="text-sm text-gray-600">Tutor: {classItem.tutor}</p>
                     <div className="flex gap-2 mt-4">
                       <Link
-                        to="/student/classroom"
+                        to={`/class/${classItem.id}`}
                         className="flex-1 bg-navbar text-white py-2 rounded-lg hover:bg-opacity-90 transition-colors flex items-center justify-center gap-2"
                       >
                         <Video size={16} />
