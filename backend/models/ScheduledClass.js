@@ -8,7 +8,8 @@ const scheduledClassSchema = new mongoose.Schema({
   date: { type: Date, required: true },
   time: { type: String, required: true },
   status: { type: String, enum: ['scheduled', 'completed', 'rescheduled'], default: 'scheduled' },
-  meetingLink: { type: String } // For WebRTC integration later
+  meetingLink: { type: String, required: true }, // Make this required
+  meetingId: { type: String, required: true, unique: true } // Add this field
 });
 
 module.exports = mongoose.model('ScheduledClass', scheduledClassSchema);

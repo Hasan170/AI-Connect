@@ -124,29 +124,6 @@ const getPendingRequests = async (req, res) => {
 
 const createClassRequest = async (req, res) => {
   try {
-    // const { studentId, subject, requestedDate, teacherId } = req.body;
-
-    // // Add proper validation
-    // if (!studentId || !subject || !requestedDate || !teacherId) {
-    //   return res.status(400).json({ message: 'All fields are required' });
-    // }
-
-    // // Verify student exists
-    // const student = await StudentDetails.findById(studentId);
-    // if (!student) {
-    //   return res.status(404).json({ message: 'Student not found' });
-    // }
-
-    // // Verify subject-teacher assignment
-    // const hasSubject = student.subjects.some(s => 
-    //   s.subject === subject && s.teacherId.equals(teacherId)
-    // );
-    
-    // if (!hasSubject) {
-    //   return res.status(400).json({ 
-    //     message: 'Student not enrolled in this subject with the specified teacher' 
-    //   });
-    // }
     // Add request logging
     console.log('Incoming request body:', req.body);
 
@@ -189,52 +166,6 @@ const createClassRequest = async (req, res) => {
     });
   }
 };
-
-// const createClassRequest = async (req, res) => {
-//   try {
-//     const { studentId, subject, requestedDate } = req.body;
-
-//     // Add validation for all required fields
-//     if (!studentId || !subject || !requestedDate || !teacherId) {
-//       return res.status(400).json({ message: 'Missing required fields' });
-//     }
-    
-//     // Verify student has this subject with assigned teacher
-//     // const student = await StudentDetails.findById(studentId)
-//     //   .populate('subjects.teacherId');
-
-//     const student = await StudentDetails.findById(studentId)
-//     .populate({
-//       path: 'subjects.teacherId',
-//       model: 'TeacherDetails' // Match your teacher model name
-//     });
-    
-//     const subjectData = student.subjects.find(s => s.subject === subject);
-//     if (!subjectData) {
-//       return res.status(400).json({ message: 'Student not enrolled in this subject' });
-//     }
-
-//     // Validate date
-//     const requestDate = new Date(requestedDate);
-//     if (isNaN(requestDate.getTime())) {
-//       return res.status(400).json({ message: 'Invalid date format' });
-//     }
-
-//     const newRequest = await ClassRequest.create({
-//       studentId,
-//       subject,
-//       requestedDate: new Date(requestedDate),
-//       status: 'pending'
-//     });
-
-//     res.status(201).json(newRequest);
-//   } catch (error) {
-//     res.status(500).json({
-//       message: 'Internal server error', 
-//       message: error.message 
-//     });
-//   }
-// };
 
 const getPendingClassRequests = async (req, res) => {
   try {

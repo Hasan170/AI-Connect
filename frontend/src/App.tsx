@@ -3,6 +3,8 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ChatSupportWidget from './components/ChatSupportWidget';
 import AIChatWidget from './components/AIChatWidget';
+import ErrorBoundary from './components/ErrorBoundary';
+import ClassSession from './pages/student/ClassSession';
 
 //main pages
 import Home from './pages/Home';
@@ -43,8 +45,8 @@ import MyCourses from './pages/student/MyCourses';
 function App() {
   const location = useLocation();
   const showFooter = !['/admin-dashboard', '/student-profile', '/tutor-profile', '/admin/students', '/admin/teachers', '/admin/resources', '/admin/settings',
-    '/student/classes', '/student/schedule', '/student/assignments', '/student/teachers', '/student/resources', '/student/fee-details', '/student/feedback', '/student/MyCourses',
-  ].includes(location.pathname);
+    '/student/classes', '/student/schedule', '/student/assignments', '/student/teachers', '/student/resources', '/student/fee-details', '/student/feedback', '/student/MyCourses', '/class/:classId',
+  ].some(path => location.pathname.startsWith(path));
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -71,7 +73,14 @@ function App() {
           <Route path="/student/fee-details" element={<FeeDetails />} />
           <Route path="/student/feedback" element={<Feedback />} />
           <Route path="/student/MyCourses" element={<MyCourses />} />
-
+          <Route 
+            path="/class/:classId" 
+            element={
+              <ErrorBoundary>
+                <ClassSession />
+              </ErrorBoundary>
+            } 
+          />
 
         </Routes>
       </main>
