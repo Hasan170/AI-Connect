@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { 
   PlayCircle, 
   FileText, 
@@ -20,6 +20,7 @@ import api from '../../api';
 
 interface Module {
   id: string;
+  _id: string;
   title: string;
   description: string;
   duration: string;
@@ -53,6 +54,7 @@ interface Course {
 
 const MyCourses: React.FC = () => {
   const { courseId } = useParams<{ courseId: string }>();
+  const navigate = useNavigate();
   const [course, setCourse] = useState<Course | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -64,217 +66,43 @@ const MyCourses: React.FC = () => {
     const fetchCourseData = async () => {
       try {
         setLoading(true);
-        // In a real app, you would fetch the course from your backend
-        // For demo purposes, we'll use mock data
-        setTimeout(() => {
-          const mockCourse: Course = {
-            id: '1',
-            title: 'Advanced Mathematics',
-            subject: 'Mathematics',
-            instructor: 'Dr. Ahmed',
-            thumbnail: 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb',
-            progress: 35,
-            totalModules: 8,
-            completedModules: 3,
-            totalHours: 24,
-            rating: 4.8,
-            studentsEnrolled: 1250,
-            modules: [
-              {
-                id: 'm1',
-                title: 'Module 1: Introduction to Calculus',
-                description: 'The basics of differential calculus and its applications.',
-                duration: '3h 20m',
-                completed: true,
-                lectures: [
-                  {
-                    id: 'l1',
-                    title: 'Introduction to the Course',
-                    type: 'video',
-                    duration: '10m',
-                    completed: true,
-                    url: 'https://www.youtube.com/embed/WUvTyaaNkzM'
-                  },
-                  {
-                    id: 'l2',
-                    title: 'What is Calculus?',
-                    type: 'video',
-                    duration: '20m',
-                    completed: true,
-                    url: 'https://www.youtube.com/embed/HfACrKJ_Y2w'
-                  },
-                  {
-                    id: 'l3',
-                    title: 'Limits and Continuity',
-                    type: 'reading',
-                    duration: '30m',
-                    completed: true
-                  },
-                  {
-                    id: 'l4',
-                    title: 'Module 1 Quiz',
-                    type: 'quiz',
-                    duration: '20m',
-                    completed: true
-                  }
-                ]
-              },
-              {
-                id: 'm2',
-                title: 'Module 2: Derivatives',
-                description: 'Understanding derivatives and their properties.',
-                duration: '4h 45m',
-                completed: true,
-                lectures: [
-                  {
-                    id: 'l5',
-                    title: 'Definition of the Derivative',
-                    type: 'video',
-                    duration: '25m',
-                    completed: true,
-                    url: 'https://www.youtube.com/embed/rAof9Ld5sOg'
-                  },
-                  {
-                    id: 'l6',
-                    title: 'Rules of Differentiation',
-                    type: 'video',
-                    duration: '30m',
-                    completed: true,
-                    url: 'https://www.youtube.com/embed/O8xoEKvE-MU'
-                  },
-                  {
-                    id: 'l7',
-                    title: 'Applications of Derivatives',
-                    type: 'reading',
-                    duration: '40m',
-                    completed: true
-                  },
-                  {
-                    id: 'l8',
-                    title: 'Derivative Problem Set',
-                    type: 'assignment',
-                    duration: '1h',
-                    completed: true
-                  }
-                ]
-              },
-              {
-                id: 'm3',
-                title: 'Module 3: Integrals',
-                description: 'Introduction to integration and the fundamental theorem of calculus.',
-                duration: '5h 10m',
-                completed: true,
-                lectures: [
-                  {
-                    id: 'l9',
-                    title: 'Introduction to Integrals',
-                    type: 'video',
-                    duration: '28m',
-                    completed: true,
-                    url: 'https://www.youtube.com/embed/rfG8ce4nNh0'
-                  },
-                  {
-                    id: 'l10',
-                    title: 'Indefinite Integrals',
-                    type: 'video',
-                    duration: '32m',
-                    completed: true,
-                    url: 'https://www.youtube.com/embed/q87L9R9v274'
-                  },
-                  {
-                    id: 'l11',
-                    title: 'Definite Integrals',
-                    type: 'video',
-                    duration: '35m',
-                    completed: false,
-                    url: 'https://www.youtube.com/embed/1RLctDS2hUQ'
-                  },
-                  {
-                    id: 'l12',
-                    title: 'Integration Techniques',
-                    type: 'reading',
-                    duration: '45m',
-                    completed: false
-                  },
-                  {
-                    id: 'l13',
-                    title: 'Module 3 Assignment',
-                    type: 'assignment',
-                    duration: '1h 30m',
-                    completed: false
-                  }
-                ]
-              },
-              {
-                id: 'm4',
-                title: 'Module 4: Applications of Integration',
-                description: 'Real-world applications of integrals.',
-                duration: '4h 30m',
-                completed: false,
-                lectures: [
-                  {
-                    id: 'l14',
-                    title: 'Area Between Curves',
-                    type: 'video',
-                    duration: '25m',
-                    completed: false,
-                    url: 'https://www.youtube.com/embed/WLHgWwNlZHk'
-                  },
-                  {
-                    id: 'l15',
-                    title: 'Volume of Solids of Revolution',
-                    type: 'video',
-                    duration: '30m',
-                    completed: false,
-                    url: 'https://www.youtube.com/embed/QL0btScXXwI'
-                  },
-                  {
-                    id: 'l16',
-                    title: 'Applications in Physics',
-                    type: 'reading',
-                    duration: '40m',
-                    completed: false
-                  },
-                  {
-                    id: 'l17',
-                    title: 'Module 4a Quiz',
-                    type: 'quiz',
-                    duration: '20m',
-                    completed: false
-                  },
-                  {
-                    id: 'l18',
-                    title: 'Module 4b Quiz',
-                    type: 'quiz',
-                    duration: '20m',
-                    completed: false
-                  }
-                ]
-              }
-            ]
-          };
-          
-          setCourse(mockCourse);
-          
-          // Automatically expand the first incomplete module
-          const firstIncompleteModule = mockCourse.modules.find(module => !module.completed);
-          if (firstIncompleteModule) {
-            setExpandedModules(prev => ({
-              ...prev,
-              [firstIncompleteModule.id]: true
-            }));
-          }
-          
-          setLoading(false);
-        }, 800);
+        setError('');
+        
+        const email = localStorage.getItem('studentEmail');
+        if (!email) {
+          navigate('/login');
+          return;
+        }
+        
+        // Get student details to get ID
+        const studentRes = await api.get(`/student/details/${email}`);
+        const studentId = studentRes.data._id;
+        
+        // Get the specific course
+        const response = await api.get(`/courses/${courseId}`);
+        const courseData = response.data;
+        
+        setCourse(courseData);
+        
+        // Automatically expand the first incomplete module
+        const firstIncompleteModule: Module | undefined = courseData.modules.find((module: Module) => !module.completed);
+        if (firstIncompleteModule) {
+          setExpandedModules(prev => ({
+            ...prev,
+            [firstIncompleteModule._id]: true
+          }));
+        }
+        
+        setLoading(false);
       } catch (error) {
+        console.error('Error fetching course:', error);
         setError('Failed to load course data');
         setLoading(false);
       }
     };
     
     fetchCourseData();
-  }, [courseId]);
+  }, [courseId, navigate]);
   
   const toggleModule = (moduleId: string) => {
     setExpandedModules(prev => ({
@@ -283,14 +111,22 @@ const MyCourses: React.FC = () => {
     }));
   };
   
-  const handleLectureClick = (lecture: Lecture) => {
+  const handleLectureClick = async (lecture: Lecture, moduleId: string) => {
     if (lecture.type === 'video' && lecture.url) {
       setCurrentVideo(lecture.url);
     }
     
-    // In a real app, you would update the completion status on the server
-    if (!lecture.completed) {
-      if (course) {
+    // Update completion status on the server
+    if (!lecture.completed && course) {
+      try {
+        await api.post('/courses/update-lecture', {
+          courseId: course.id,
+          moduleId: moduleId,
+          lectureId: lecture.id,
+          completed: true
+        });
+        
+        // Update the UI after successful API call
         const updatedModules = course.modules.map(module => ({
           ...module,
           lectures: module.lectures.map(l => 
@@ -302,6 +138,8 @@ const MyCourses: React.FC = () => {
           ...course,
           modules: updatedModules
         });
+      } catch (error) {
+        console.error('Error updating lecture status:', error);
       }
     }
   };
@@ -336,7 +174,7 @@ const MyCourses: React.FC = () => {
   if (loading) {
     return (
       <div className="flex">
-        <StudentSidebar />
+        <StudentSidebar onNotebookClick={() => setActiveTab('notes')} />
         <div className="flex-1 pt-24 px-6 bg-background min-h-screen ml-64">
           <div className="max-w-7xl mx-auto">
             <div className="flex justify-center items-center h-64">
@@ -351,7 +189,7 @@ const MyCourses: React.FC = () => {
   if (error || !course) {
     return (
       <div className="flex">
-        <StudentSidebar />
+        <StudentSidebar onNotebookClick={() => setActiveTab('notes')} />
         <div className="flex-1 pt-24 px-6 bg-background min-h-screen ml-64">
           <div className="max-w-7xl mx-auto">
             <div className="flex justify-center items-center h-64">
@@ -368,7 +206,7 @@ const MyCourses: React.FC = () => {
   
   return (
     <div className="flex">
-      <StudentSidebar />
+      <StudentSidebar onNotebookClick={() => setActiveTab('notes')} />
       <div className="flex-1 pt-24 px-6 bg-background min-h-screen ml-64">
         <div className="max-w-7xl mx-auto">
           {/* Course Header */}
@@ -508,7 +346,7 @@ const MyCourses: React.FC = () => {
                               <li 
                                 key={lecture.id} 
                                 className={`p-4 hover:bg-gray-100 cursor-pointer flex justify-between items-center ${currentVideo === lecture.url ? 'bg-blue-50' : ''}`}
-                                onClick={() => handleLectureClick(lecture)}
+                                onClick={() => handleLectureClick(lecture, module.id)}
                               >
                                 <div className="flex items-center">
                                   {getLectureIcon(lecture.type)}

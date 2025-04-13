@@ -5,6 +5,7 @@ const studentRoutes = require('./routes/studentRoutes');
 const teacherRoutes = require('./routes/teacherRoutes');
 const requestRoutes = require('./routes/requestRoutes');
 const classRoutes = require('./routes/classRoutes');
+const courseRoutes = require('./routes/courseRoutes'); // Add this line
 
 const app = express();
 app.use(cors());
@@ -19,6 +20,7 @@ app.use('/api/student', studentRoutes);
 app.use('/api/teacher', teacherRoutes);
 app.use('/api/requests', requestRoutes);
 app.use('/api/classes', classRoutes);
+app.use('/api/courses', courseRoutes); 
 
 app.use((err, req, res, next) => {
     console.error('Unhandled Error:', err.stack);
