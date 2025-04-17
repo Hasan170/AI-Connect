@@ -12,7 +12,7 @@ app.use(cors({ origin: 'http://localhost:5173' }));
 app.use(express.json()); // Parse JSON request bodies
 
 // Connect to MongoDB
-connectDB();
+connectDB();  
 
 // Use routes
 app.use('/api/student', studentRoutes);

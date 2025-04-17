@@ -1,3 +1,42 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Keep header visible */
+body.in-meeting {
+  overflow: hidden;
+  
+  /* Hide only footer */
+  footer {
+    display: none !important;
+  }
+}
+
+/* Adjust Jitsi container */
+.jitsi-container {
+  width: 100% !important;
+  height: calc(100vh - 80px) !important;
+  position: fixed !important;
+  top: 80px !important;
+  left: 0 !important;
+  z-index: 9998 !important;
+}
+
+/* Move Jitsi toolbar up */
+#jitsi-meet {
+  bottom: 20px !important;
+}
+
+/* Adjust participant list */
+#filmstripRemoteParticipants {
+  padding-bottom: 100px !important;
+}
+
+/* Make header stay on top */
+header {
+  z-index: 10000 !important;
+  position: relative;
+}
+
+
+
