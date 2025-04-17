@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { 
   PlayCircle, 
   FileText, 
@@ -13,168 +13,340 @@ import {
   ChevronDown,
   ChevronUp,
   Users,
-  Star
+  Star,
+  AlertCircle,
+  Check
 } from 'lucide-react';
 import StudentSidebar from '../../components/StudentSidebar';
-import api from '../../api';
+import { Course, Lecture, coursesData } from './coursesData';
 
-interface Module {
-  id: string;
-  _id: string;
-  title: string;
-  description: string;
-  duration: string;
-  completed: boolean;
-  lectures: Lecture[];
+interface ExpandedModules {
+  [key: string]: boolean;
 }
 
-interface Lecture {
+interface QuizQuestion {
   id: string;
-  title: string;
-  type: 'video' | 'reading' | 'quiz' | 'assignment';
-  duration: string;
-  completed: boolean;
-  url?: string;
-}
-
-interface Course {
-  id: string;
-  title: string;
-  subject: string;
-  instructor: string;
-  thumbnail: string;
-  progress: number;
-  totalModules: number;
-  completedModules: number;
-  totalHours: number;
-  rating: number;
-  studentsEnrolled: number;
-  modules: Module[];
+  question: string;
+  options: string[];
+  correctAnswer: number;
+  userAnswer?: number;
 }
 
 const MyCourses: React.FC = () => {
   const { courseId } = useParams<{ courseId: string }>();
-  const navigate = useNavigate();
   const [course, setCourse] = useState<Course | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [expandedModules, setExpandedModules] = useState<Record<string, boolean>>({});
+  const [expandedModules, setExpandedModules] = useState<ExpandedModules>({});
   const [currentVideo, setCurrentVideo] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'content' | 'overview' | 'discussion' | 'notes'>('content');
-  
+  const [currentLecture, setCurrentLecture] = useState<Lecture | null>(null);
+  const [showQuiz, setShowQuiz] = useState(false);
+  const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
+  const [quizSubmitted, setQuizSubmitted] = useState(false);
+
   useEffect(() => {
     const fetchCourseData = async () => {
       try {
         setLoading(true);
-        setError('');
         
-        const email = localStorage.getItem('studentEmail');
-        if (!email) {
-          navigate('/login');
-          return;
-        }
-        
-        // Get student details to get ID
-        const studentRes = await api.get(`/student/details/${email}`);
-        const studentId = studentRes.data._id;
-        
-        // Get the specific course
-        const response = await api.get(`/courses/${courseId}`);
-        const courseData = response.data;
-        
-        setCourse(courseData);
-        
-        // Automatically expand the first incomplete module
-        const firstIncompleteModule: Module | undefined = courseData.modules.find((module: Module) => !module.completed);
-        if (firstIncompleteModule) {
-          setExpandedModules(prev => ({
-            ...prev,
-            [firstIncompleteModule._id]: true
-          }));
-        }
-        
-        setLoading(false);
+        setTimeout(() => {
+          if (courseId && coursesData[courseId]) {
+            const foundCourse = coursesData[courseId];
+            setCourse(foundCourse);
+
+            // Expand first incomplete module
+            const firstIncompleteModule = foundCourse.modules.find(module => 
+              module.lectures.some(lecture => !lecture.completed)
+            );
+            if (firstIncompleteModule) {
+              setExpandedModules(prev => ({
+                ...prev,
+                [firstIncompleteModule.id]: true
+              }));
+            }
+          } else {
+            setError('Course not found');
+          }
+          setLoading(false);
+        }, 800);
       } catch (error) {
-        console.error('Error fetching course:', error);
         setError('Failed to load course data');
         setLoading(false);
       }
     };
-    
+
     fetchCourseData();
-  }, [courseId, navigate]);
-  
+  }, [courseId]);
+
   const toggleModule = (moduleId: string) => {
     setExpandedModules(prev => ({
       ...prev,
       [moduleId]: !prev[moduleId]
     }));
   };
-  
-  const handleLectureClick = async (lecture: Lecture, moduleId: string) => {
+
+  const handleLectureClick = (lecture: Lecture) => {
+    setCurrentLecture(lecture);
+    
     if (lecture.type === 'video' && lecture.url) {
       setCurrentVideo(lecture.url);
+      setShowQuiz(false);
+    } else if (lecture.type === 'quiz' || lecture.type === 'assignment') {
+      setCurrentVideo(null);
+      setShowQuiz(true);
+      generateQuizQuestions(lecture);
+    } else {
+      setCurrentVideo(null);
+      setShowQuiz(false);
+    }
+
+    // Update completion status
+    if (!lecture.completed && course) {
+      const updatedModules = course.modules.map(module => ({
+        ...module,
+        lectures: module.lectures.map(l => 
+          l.id === lecture.id ? { ...l, completed: true } : l
+        )
+      }));
+
+      setCourse({
+        ...course,
+        modules: updatedModules,
+        completedModules: updatedModules.filter(module => 
+          module.lectures.every(l => l.completed)
+        ).length
+      });
+    }
+  };
+
+  const generateQuizQuestions = (lecture: Lecture) => {
+    // Reset quiz state
+    setQuizSubmitted(false);
+
+    // Generate questions based on lecture title and type
+    const isQuiz = lecture.type === 'quiz';
+    const questionsCount = isQuiz ? 5 : 3;
+    const subject = course?.subject || '';
+    
+    let generatedQuestions: QuizQuestion[] = [];
+    
+    // Generate different questions based on the lecture subject/title
+    if (subject.includes('Math') || lecture.title.includes('Calculus')) {
+      generatedQuestions = [
+        {
+          id: 'q1',
+          question: 'What is the derivative of x²?',
+          options: ['x', '2x', '2x²', 'x²'],
+          correctAnswer: 1
+        },
+        {
+          id: 'q2',
+          question: 'The integral of cos(x) is:',
+          options: ['sin(x) + C', '-sin(x) + C', 'tan(x) + C', 'sec(x) + C'],
+          correctAnswer: 0
+        },
+        {
+          id: 'q3',
+          question: 'What is the limit of (sin x)/x as x approaches 0?',
+          options: ['0', '1', 'infinity', 'undefined'],
+          correctAnswer: 1
+        },
+        {
+          id: 'q4',
+          question: 'Which of the following functions is not continuous at x = 0?',
+          options: ['f(x) = x²', 'f(x) = |x|', 'f(x) = 1/x', 'f(x) = sin(x)'],
+          correctAnswer: 2
+        },
+        {
+          id: 'q5',
+          question: 'The chain rule is used for:',
+          options: ['Addition of functions', 'Multiplication of functions', 'Division of functions', 'Composition of functions'],
+          correctAnswer: 3
+        }
+      ];
+    } else if (subject.includes('Physics') || lecture.title.includes('Physics')) {
+      generatedQuestions = [
+        {
+          id: 'q1',
+          question: 'What is the SI unit of force?',
+          options: ['Watt', 'Joule', 'Newton', 'Pascal'],
+          correctAnswer: 2
+        },
+        {
+          id: 'q2',
+          question: 'Einstein\'s famous equation E=mc² relates:',
+          options: ['Energy and momentum', 'Mass and energy', 'Force and acceleration', 'Velocity and time'],
+          correctAnswer: 1
+        },
+        {
+          id: 'q3',
+          question: 'Which physical quantity remains conserved in all processes?',
+          options: ['Velocity', 'Temperature', 'Energy', 'Electric charge'],
+          correctAnswer: 2
+        },
+        {
+          id: 'q4',
+          question: 'The second law of thermodynamics concerns:',
+          options: ['Conservation of mass', 'Conservation of energy', 'Increase of entropy', 'Conservation of momentum'],
+          correctAnswer: 2
+        },
+        {
+          id: 'q5',
+          question: 'Which particle is responsible for electromagnetic force?',
+          options: ['Neutrino', 'Photon', 'Gluon', 'W boson'],
+          correctAnswer: 1
+        }
+      ];
+    } else if (subject.includes('Chemistry') || lecture.title.includes('Chemistry')) {
+      generatedQuestions = [
+        {
+          id: 'q1',
+          question: 'What type of hybridization is present in a carbon atom of benzene?',
+          options: ['sp', 'sp²', 'sp³', 'sp³d'],
+          correctAnswer: 1
+        },
+        {
+          id: 'q2',
+          question: 'Which functional group is present in alcohols?',
+          options: ['-COOH', '-CHO', '-OH', '-NH₂'],
+          correctAnswer: 2
+        },
+        {
+          id: 'q3',
+          question: 'The IUPAC name of CH₃-CH₂-CH₂-OH is:',
+          options: ['Propanol', '1-Propanol', '3-Propanol', 'Propan-1-ol'],
+          correctAnswer: 1
+        },
+        {
+          id: 'q4',
+          question: 'Which type of reaction involves the transfer of electrons?',
+          options: ['Substitution', 'Elimination', 'Addition', 'Redox'],
+          correctAnswer: 3
+        },
+        {
+          id: 'q5',
+          question: 'What is the bond angle in a sp³ hybridized carbon?',
+          options: ['90°', '109.5°', '120°', '180°'],
+          correctAnswer: 1
+        }
+      ];
+    } else if (subject.includes('Literature') || lecture.title.includes('Literature')) {
+      generatedQuestions = [
+        {
+          id: 'q1',
+          question: 'Who wrote "Romeo and Juliet"?',
+          options: ['Charles Dickens', 'William Shakespeare', 'Jane Austen', 'Mark Twain'],
+          correctAnswer: 1
+        },
+        {
+          id: 'q2',
+          question: 'A figure of speech where non-human objects are given human qualities is called:',
+          options: ['Metaphor', 'Simile', 'Personification', 'Alliteration'],
+          correctAnswer: 2
+        },
+        {
+          id: 'q3',
+          question: 'Which literary movement emphasized emotion, individualism, and glorification of nature?',
+          options: ['Modernism', 'Realism', 'Romanticism', 'Naturalism'],
+          correctAnswer: 2
+        },
+        {
+          id: 'q4',
+          question: 'What is the main theme of "Paradise Lost" by John Milton?',
+          options: ['Love and betrayal', 'Fall of man', 'Class struggle', 'Industrialization'],
+          correctAnswer: 1
+        },
+        {
+          id: 'q5',
+          question: 'Which literary device involves contradictory terms appearing in conjunction?',
+          options: ['Hyperbole', 'Oxymoron', 'Irony', 'Euphemism'],
+          correctAnswer: 1
+        }
+      ];
+    } else {
+      // Default questions
+      generatedQuestions = [
+        {
+          id: 'q1',
+          question: 'Which of these is a best practice in the field?',
+          options: ['Option A', 'Option B', 'Option C', 'Option D'],
+          correctAnswer: 2
+        },
+        {
+          id: 'q2',
+          question: 'What is the primary concept introduced in this module?',
+          options: ['Concept 1', 'Concept 2', 'Concept 3', 'Concept 4'],
+          correctAnswer: 1
+        },
+        {
+          id: 'q3',
+          question: 'Which statement best describes the main theory discussed?',
+          options: ['Statement A', 'Statement B', 'Statement C', 'Statement D'],
+          correctAnswer: 0
+        },
+        {
+          id: 'q4',
+          question: 'What is the key takeaway from this lecture?',
+          options: ['Takeaway 1', 'Takeaway 2', 'Takeaway 3', 'Takeaway 4'],
+          correctAnswer: 2
+        },
+        {
+          id: 'q5',
+          question: 'Which example best illustrates the concept?',
+          options: ['Example A', 'Example B', 'Example C', 'Example D'],
+          correctAnswer: 1
+        }
+      ];
     }
     
-    // Update completion status on the server
-    if (!lecture.completed && course) {
-      try {
-        await api.post('/courses/update-lecture', {
-          courseId: course.id,
-          moduleId: moduleId,
-          lectureId: lecture.id,
-          completed: true
-        });
-        
-        // Update the UI after successful API call
-        const updatedModules = course.modules.map(module => ({
-          ...module,
-          lectures: module.lectures.map(l => 
-            l.id === lecture.id ? { ...l, completed: true } : l
-          )
-        }));
-        
-        setCourse({
-          ...course,
-          modules: updatedModules
-        });
-      } catch (error) {
-        console.error('Error updating lecture status:', error);
-      }
-    }
+    // Limit the number of questions based on quiz/assignment
+    setQuizQuestions(generatedQuestions.slice(0, questionsCount));
   };
-  
-  const getLectureIcon = (type: string) => {
-    switch(type) {
-      case 'video':
-        return <PlayCircle className="text-navbar" size={18} />;
-      case 'reading':
-        return <FileText className="text-green-600" size={18} />;
-      case 'quiz':
-        return <BookOpen className="text-purple-600" size={18} />;
-      case 'assignment':
-        return <FileText className="text-orange-500" size={18} />;
-      default:
-        return <PlayCircle className="text-navbar" size={18} />;
-    }
-  };
-  
-  const getCompletionStatus = (completed: boolean) => {
-    return completed ? (
-      <span className="flex items-center text-green-600">
-        <CheckCircle size={16} className="mr-1" /> Completed
-      </span>
-    ) : (
-      <span className="flex items-center text-gray-500">
-        <Clock size={16} className="mr-1" /> Pending
-      </span>
+
+  const handleAnswerSelect = (questionId: string, optionIndex: number) => {
+    if (quizSubmitted) return; // Don't allow changes after submission
+    
+    setQuizQuestions(questions => 
+      questions.map(q => 
+        q.id === questionId ? { ...q, userAnswer: optionIndex } : q
+      )
     );
   };
-  
+
+  const handleQuizSubmit = () => {
+    setQuizSubmitted(true);
+    // You would typically send the results to a server here
+  };
+
+  const calculateQuizScore = () => {
+    const correctAnswers = quizQuestions.filter(q => 
+      q.userAnswer !== undefined && q.userAnswer === q.correctAnswer
+    ).length;
+    
+    return {
+      score: correctAnswers,
+      total: quizQuestions.length,
+      percentage: Math.round((correctAnswers / quizQuestions.length) * 100)
+    };
+  };
+
+  const getLectureIcon = (type: string) => {
+    switch(type) {
+      case 'video': return <PlayCircle className="text-navbar" size={18} />;
+      case 'reading': return <FileText className="text-green-600" size={18} />;
+      case 'quiz': return <BookOpen className="text-purple-600" size={18} />;
+      case 'assignment': return <FileText className="text-orange-500" size={18} />;
+      default: return <PlayCircle className="text-navbar" size={18} />;
+    }
+  };
+
+  const handleNotebookClick = () => setActiveTab('notes');
+
   if (loading) {
     return (
       <div className="flex">
-        <StudentSidebar onNotebookClick={() => setActiveTab('notes')} />
+        <StudentSidebar onNotebookClick={handleNotebookClick} />
         <div className="flex-1 pt-24 px-6 bg-background min-h-screen ml-64">
           <div className="max-w-7xl mx-auto">
             <div className="flex justify-center items-center h-64">
@@ -185,11 +357,11 @@ const MyCourses: React.FC = () => {
       </div>
     );
   }
-  
+
   if (error || !course) {
     return (
       <div className="flex">
-        <StudentSidebar onNotebookClick={() => setActiveTab('notes')} />
+        <StudentSidebar onNotebookClick={handleNotebookClick} />
         <div className="flex-1 pt-24 px-6 bg-background min-h-screen ml-64">
           <div className="max-w-7xl mx-auto">
             <div className="flex justify-center items-center h-64">
@@ -203,21 +375,21 @@ const MyCourses: React.FC = () => {
       </div>
     );
   }
-  
+
   return (
     <div className="flex">
-      <StudentSidebar onNotebookClick={() => setActiveTab('notes')} />
+      <StudentSidebar onNotebookClick={handleNotebookClick} />
       <div className="flex-1 pt-24 px-6 bg-background min-h-screen ml-64">
         <div className="max-w-7xl mx-auto">
           {/* Course Header */}
           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
             <div className="flex items-center mb-4">
-              <Link to="/student/courses" className="text-navbar hover:text-button-secondary flex items-center">
+              <Link to="/student/Courses" className="text-navbar hover:text-button-secondary flex items-center">
                 <ArrowLeft size={20} className="mr-2" />
                 Back to My Courses
               </Link>
             </div>
-            
+
             <div className="flex flex-col md:flex-row gap-6">
               <div className="md:w-2/3">
                 <h1 className="text-3xl font-bold text-text-primary mb-2">{course.title}</h1>
@@ -247,7 +419,7 @@ const MyCourses: React.FC = () => {
                   </div>
                 </div>
               </div>
-              
+
               <div className="md:w-1/3">
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <h3 className="text-lg font-medium text-text-primary mb-2">Your Progress</h3>
@@ -265,7 +437,7 @@ const MyCourses: React.FC = () => {
               </div>
             </div>
           </div>
-          
+
           {/* Course Content Tabs */}
           <div className="bg-white rounded-lg shadow-md mb-6">
             <div className="flex border-b">
@@ -295,7 +467,7 @@ const MyCourses: React.FC = () => {
               </button>
             </div>
           </div>
-          
+
           {/* Main Content Area */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left Column - Course Content */}
@@ -305,7 +477,7 @@ const MyCourses: React.FC = () => {
                   <h2 className="text-lg font-semibold">Course Content</h2>
                   <p className="text-sm text-gray-600">{course.totalModules} modules • {course.totalHours} hours</p>
                 </div>
-                
+
                 <div className="divide-y">
                   {course.modules.map((module) => (
                     <div key={module.id} className="transition-all duration-300">
@@ -327,7 +499,7 @@ const MyCourses: React.FC = () => {
                           </div>
                         </div>
                         <div className="flex items-center gap-3">
-                          {module.completed && (
+                          {module.lectures.every(l => l.completed) && (
                             <span className="text-green-600">
                               <CheckCircle size={18} />
                             </span>
@@ -335,7 +507,7 @@ const MyCourses: React.FC = () => {
                           {expandedModules[module.id] ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
                         </div>
                       </div>
-                      
+
                       {expandedModules[module.id] && (
                         <div className="bg-gray-50 border-t">
                           <div className="p-4 text-sm text-gray-700 mb-2">
@@ -345,8 +517,10 @@ const MyCourses: React.FC = () => {
                             {module.lectures.map((lecture) => (
                               <li 
                                 key={lecture.id} 
-                                className={`p-4 hover:bg-gray-100 cursor-pointer flex justify-between items-center ${currentVideo === lecture.url ? 'bg-blue-50' : ''}`}
-                                onClick={() => handleLectureClick(lecture, module.id)}
+                                className={`p-4 hover:bg-gray-100 cursor-pointer flex justify-between items-center ${
+                                  (currentVideo === lecture.url || (currentLecture?.id === lecture.id && showQuiz)) ? 'bg-blue-50' : ''
+                                }`}
+                                onClick={() => handleLectureClick(lecture)}
                               >
                                 <div className="flex items-center">
                                   {getLectureIcon(lecture.type)}
@@ -366,12 +540,12 @@ const MyCourses: React.FC = () => {
                 </div>
               </div>
             </div>
-            
+
             {/* Right Column - Video Player and Content */}
             <div className="lg:col-span-2 order-1 lg:order-2">
               {activeTab === 'content' && (
                 <div className="bg-white rounded-lg shadow-md overflow-hidden">
-                  {currentVideo ? (
+                  {currentVideo && !showQuiz ? (
                     <div className="aspect-w-16 aspect-h-9">
                       <iframe 
                         src={currentVideo} 
@@ -381,368 +555,284 @@ const MyCourses: React.FC = () => {
                         allowFullScreen
                       ></iframe>
                     </div>
+                  ) : showQuiz ? (
+                    <div className="p-6">
+                      <div className="mb-6">
+                        <h2 className="text-xl font-bold mb-2">
+                          {currentLecture?.type === 'quiz' ? 'Quiz' : 'Assignment'}: {currentLecture?.title}
+                        </h2>
+                        <p className="text-sm text-gray-600">
+                          Complete {currentLecture?.type === 'quiz' ? 'the quiz' : 'this assignment'} to continue with the course.
+                        </p>
+                        {!quizSubmitted && <p className="text-sm text-gray-500 mt-1">Duration: {currentLecture?.duration}</p>}
+                      </div>
+
+                      {quizSubmitted ? (
+                        <div className="mb-8">
+                          <div className="bg-gray-50 rounded-lg p-6 mb-6">
+                            <h3 className="text-lg font-medium mb-2">Results</h3>
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="text-2xl font-bold">{calculateQuizScore().percentage}%</p>
+                                <p className="text-sm text-gray-600">
+                                  {calculateQuizScore().score} out of {calculateQuizScore().total} correct
+                                </p>
+                              </div>
+                              {calculateQuizScore().percentage >= 70 ? (
+                                <div className="flex items-center text-green-600">
+                                  <Check size={20} className="mr-2" />
+                                  <span className="font-medium">Passed</span>
+                                </div>
+                              ) : (
+                                <div className="flex items-center text-red-500">
+                                  <AlertCircle size={20} className="mr-2" />
+                                  <span className="font-medium">Not passed</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          
+                          <div>
+                            <h3 className="font-medium mb-4">Review your answers:</h3>
+                            {quizQuestions.map((question, index) => (
+                              <div key={question.id} className="mb-6">
+                                <p className="font-medium mb-2">
+                                  {index + 1}. {question.question}
+                                </p>
+                                <div className="ml-4">
+                                  {question.options.map((option, optIndex) => (
+                                    <div 
+                                      key={optIndex} 
+                                      className={`py-2 px-3 rounded-md mb-2 ${
+                                        question.correctAnswer === optIndex
+                                          ? 'bg-green-100 border border-green-300'
+                                          : question.userAnswer === optIndex && question.userAnswer !== question.correctAnswer
+                                            ? 'bg-red-100 border border-red-300'
+                                            : 'bg-gray-50'
+                                      }`}
+                                    >
+                                      <div className="flex items-center">
+                                        {question.correctAnswer === optIndex && (
+                                          <Check size={16} className="text-green-600 mr-2" />
+                                        )}
+                                        <span>{option}</span>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+
+                          <button 
+                            onClick={() => setShowQuiz(false)}
+                            className="mt-4 px-6 py-3 bg-navbar text-white rounded-lg hover:bg-opacity-90 transition-colors"
+                          >
+                            Continue with course
+                          </button>
+                        </div>
+                      ) : (
+                        <div>
+                          {quizQuestions.map((question, index) => (
+                            <div key={question.id} className="mb-8">
+                              <p className="font-medium mb-3">
+                                Question {index + 1}: {question.question}
+                              </p>
+                              <div className="ml-4">
+                                {question.options.map((option, optIndex) => (
+                                  <div 
+                                    key={optIndex} 
+                                    className={`py-3 px-4 rounded-md mb-2 cursor-pointer ${
+                                      question.userAnswer === optIndex 
+                                        ? 'bg-blue-100 border border-blue-300' 
+                                        : 'bg-gray-50 hover:bg-gray-100'
+                                    }`}
+                                    onClick={() => handleAnswerSelect(question.id, optIndex)}
+                                  >
+                                    <div className="flex items-center">
+                                      <div className={`w-5 h-5 rounded-full border ${
+                                        question.userAnswer === optIndex 
+                                          ? 'border-blue-500 bg-blue-500' 
+                                          : 'border-gray-400'
+                                      } mr-3 flex items-center justify-center`}>
+                                        {question.userAnswer === optIndex && (
+                                          <div className="w-2 h-2 rounded-full bg-white"></div>
+                                        )}
+                                      </div>
+                                      <span>{option}</span>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+
+                          <div className="mt-8 flex justify-between items-center">
+                            <p className="text-sm text-gray-600">
+                              Answer all {quizQuestions.length} questions to submit.
+                            </p>
+                            <button 
+                              onClick={handleQuizSubmit}
+                              disabled={quizQuestions.some(q => q.userAnswer === undefined)}
+                              className={`px-6 py-3 rounded-lg ${
+                                quizQuestions.some(q => q.userAnswer === undefined)
+                                  ? 'bg-gray-300 cursor-not-allowed'
+                                  : 'bg-navbar text-white hover:bg-opacity-90 transition-colors'
+                              }`}
+                            >
+                              Submit {currentLecture?.type === 'quiz' ? 'Quiz' : 'Assignment'}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   ) : (
                     <div className="aspect-w-16 aspect-h-9 bg-gray-200 flex items-center justify-center">
                       <div className="text-center">
                         <PlayCircle size={48} className="mx-auto mb-2 text-gray-400" />
-                        <p className="text-gray-600">Select a video lecture to start learning</p>
+                        <p className="text-gray-600">Select a lecture to start learning</p>
                       </div>
                     </div>
                   )}
-                  
-                  <div className="p-6">
-                    <h2 className="text-xl font-semibold mb-4">Learning Resources</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                        <h3 className="font-medium mb-2 flex items-center">
-                          <FileText size={18} className="mr-2 text-navbar" />
-                          Course Textbook
-                        </h3>
-                        <p className="text-sm text-gray-600 mb-2">Complete course textbook with all formulas and examples.</p>
-                        <button className="text-navbar hover:text-button-secondary text-sm flex items-center">
-                          <Download size={14} className="mr-1" />
-                          Download PDF
-                        </button>
-                      </div>
-                      
-                      <div className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                        <h3 className="font-medium mb-2 flex items-center">
-                          <FileText size={18} className="mr-2 text-navbar" />
-                          Formula Sheet
-                        </h3>
-                        <p className="text-sm text-gray-600 mb-2">Quick reference to all important formulas in the course.</p>
-                        <button className="text-navbar hover:text-button-secondary text-sm flex items-center">
-                          <Download size={14} className="mr-1" />
-                          Download PDF
-                        </button>
-                      </div>
-                      
-                      <div className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                        <h3 className="font-medium mb-2 flex items-center">
-                          <FileText size={18} className="mr-2 text-navbar" />
-                          Practice Problems
-                        </h3>
-                        <p className="text-sm text-gray-600 mb-2">Additional practice problems with solutions.</p>
-                        <button className="text-navbar hover:text-button-secondary text-sm flex items-center">
-                          <Download size={14} className="mr-1" />
-                          Download PDF
-                        </button>
-                      </div>
-                      
-                      <div className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                        <h3 className="font-medium mb-2 flex items-center">
-                          <FileText size={18} className="mr-2 text-navbar" />
-                          Lecture Slides
-                        </h3>
-                        <p className="text-sm text-gray-600 mb-2">Slides used in the video lectures.</p>
-                        <button className="text-navbar hover:text-button-secondary text-sm flex items-center">
-                          <Download size={14} className="mr-1" />
-                          Download PPT
-                        </button>
-                      </div>
+
+                  {/* Content description */}
+                  {!showQuiz && currentVideo && (
+                    <div className="p-6">
+                      <h2 className="text-xl font-bold mb-4">{currentLecture?.title}</h2>
+                      <p className="text-gray-700 mb-4">
+                        {course.description}
+                      </p>
                     </div>
-                  </div>
+                  )}
                 </div>
               )}
-              
+
               {activeTab === 'overview' && (
                 <div className="bg-white rounded-lg shadow-md p-6">
-                  <h2 className="text-xl font-semibold mb-4">Course Overview</h2>
-                  <div className="mb-6">
-                    <h3 className="text-lg font-medium mb-2">About This Course</h3>
-                    <p className="text-gray-700 mb-4">
-                      This comprehensive course on Advanced Mathematics covers calculus fundamentals, including differentiation, integration, and their applications. By the end of this course, you'll be able to solve complex mathematical problems and apply these concepts to real-world scenarios.
-                    </p>
-                    <p className="text-gray-700">
-                      The course is designed for high school students preparing for college-level mathematics or anyone interested in deepening their understanding of calculus.
-                    </p>
-                  </div>
+                  <h2 className="text-xl font-bold mb-4">Course Overview</h2>
+                  <p className="text-gray-700 mb-6">
+                    {course.description}
+                  </p>
                   
-                  <div className="mb-6">
-                    <h3 className="text-lg font-medium mb-2">What You'll Learn</h3>
-                    <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                      <li className="flex items-start">
-                        <CheckCircle size={18} className="mr-2 text-green-600 mt-0.5" />
-                        <span>Understand limits and continuity</span>
-                      </li>
-                      <li className="flex items-start">
-                        <CheckCircle size={18} className="mr-2 text-green-600 mt-0.5" />
-                        <span>Master differentiation techniques</span>
-                      </li>
-                      <li className="flex items-start">
-                        <CheckCircle size={18} className="mr-2 text-green-600 mt-0.5" />
-                        <span>Apply derivatives to real-world problems</span>
-                      </li>
-                      <li className="flex items-start">
-                        <CheckCircle size={18} className="mr-2 text-green-600 mt-0.5" />
-                        <span>Calculate integrals using various methods</span>
-                      </li>
-                      <li className="flex items-start">
-                        <CheckCircle size={18} className="mr-2 text-green-600 mt-0.5" />
-                        <span>Solve area and volume problems</span>
-                      </li>
-                      <li className="flex items-start">
-                        <CheckCircle size={18} className="mr-2 text-green-600 mt-0.5" />
-                        <span>Apply calculus to physics and engineering</span>
-                      </li>
-                      <li className="flex items-start">
-                        <CheckCircle size={18} className="mr-2 text-green-600 mt-0.5" />
-                        <span>Analyze functions using calculus</span>
-                      </li>
-                      <li className="flex items-start">
-                        <CheckCircle size={18} className="mr-2 text-green-600 mt-0.5" />
-                        <span>Understand the Fundamental Theorem of Calculus</span>
-                      </li>
-                    </ul>
-                  </div>
+                  <h3 className="font-medium text-lg mb-3">What You'll Learn</h3>
+                  <ul className="space-y-2 mb-6">
+                    <li className="flex items-start">
+                      <Check size={18} className="text-green-500 mr-2 mt-1" />
+                      <span>Master the key concepts and principles in {course.subject}</span>
+                    </li>
+                    <li className="flex items-start">
+                      <Check size={18} className="text-green-500 mr-2 mt-1" />
+                      <span>Apply theoretical knowledge to practical problems and scenarios</span>
+                    </li>
+                    <li className="flex items-start">
+                      <Check size={18} className="text-green-500 mr-2 mt-1" />
+                      <span>Develop critical thinking skills related to the subject matter</span>
+                    </li>
+                    <li className="flex items-start">
+                      <Check size={18} className="text-green-500 mr-2 mt-1" />
+                      <span>Gain confidence in your understanding through regular assessments</span>
+                    </li>
+                  </ul>
                   
-                  <div className="mb-6">
-                    <h3 className="text-lg font-medium mb-2">Prerequisites</h3>
-                    <ul className="space-y-2">
-                      <li className="flex items-start">
-                        <span className="mr-2">•</span>
-                        <span>Basic algebra and trigonometry</span>
-                      </li>
-                      <li className="flex items-start">
-                        <span className="mr-2">•</span>
-                        <span>Understanding of functions and their graphs</span>
-                      </li>
-                      <li className="flex items-start">
-                        <span className="mr-2">•</span>
-                        <span>Familiarity with the concept of limits (helpful but not required)</span>
-                      </li>
-                    </ul>
-                  </div>
+                  <h3 className="font-medium text-lg mb-3">Prerequisites</h3>
+                  <p className="text-gray-700 mb-6">
+                    Basic understanding of the subject fundamentals is recommended, though not required.
+                    This course is designed to accommodate learners at various levels.
+                  </p>
                   
-                  <div>
-                    <h3 className="text-lg font-medium mb-2">Instructor</h3>
-                    <div className="flex items-center gap-4">
-                      <div className="w-16 h-16 rounded-full bg-navbar text-white flex items-center justify-center">
-                        <Users size={24} />
-                      </div>
-                      <div>
-                        <h4 className="font-medium">{course.instructor}</h4>
-                        <p className="text-sm text-gray-600">Professor of Mathematics</p>
-                        <p className="text-sm text-gray-600">Ph.D. in Applied Mathematics</p>
-                        <div className="flex items-center mt-1">
-                          <Star size={16} className="text-yellow-500 fill-current" />
-                          <Star size={16} className="text-yellow-500 fill-current" />
-                          <Star size={16} className="text-yellow-500 fill-current" />
-                          <Star size={16} className="text-yellow-500 fill-current" />
-                          <Star size={16} className="text-yellow-500 fill-current" />
-                          <span className="ml-1 text-sm">(4.9)</span>
-                        </div>
-                      </div>
+                  <h3 className="font-medium text-lg mb-3">About the Instructor</h3>
+                  <div className="flex items-start">
+                    <div className="w-16 h-16 rounded-full bg-gray-300 mr-4"></div>
+                    <div>
+                      <h4 className="font-medium">{course.instructor}</h4>
+                      <p className="text-gray-600 text-sm mb-2">Professor of {course.subject}</p>
+                      <p className="text-gray-700">
+                        An expert in the field with over 10 years of teaching experience.
+                        Specializes in making complex concepts accessible to students of all levels.
+                      </p>
                     </div>
                   </div>
                 </div>
               )}
-              
+
               {activeTab === 'discussion' && (
                 <div className="bg-white rounded-lg shadow-md p-6">
-                  <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-xl font-semibold">Discussion Forum</h2>
-                    <button className="bg-navbar text-white px-4 py-2 rounded-lg hover:bg-button-secondary transition-colors">
-                      New Post
+                  <h2 className="text-xl font-bold mb-4">Discussion Forum</h2>
+                  <div className="mb-6">
+                    <textarea 
+                      className="w-full border rounded-lg p-4 min-h-[100px]"
+                      placeholder="Ask a question or start a discussion..."
+                    ></textarea>
+                    <button className="mt-3 bg-navbar text-white px-4 py-2 rounded-lg">
+                      Post
                     </button>
                   </div>
                   
-                  <div className="mb-6">
-                    <div className="relative">
-                      <input
-                        type="text"
-                        placeholder="Search discussions..."
-                        className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-navbar"
-                      />
-                      <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    {/* Discussion Thread */}
-                    <div className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <div className="space-y-6">
+                    <div className="border-b pb-6">
                       <div className="flex justify-between mb-2">
-                        <h3 className="font-medium">Help with Problem 3.4</h3>
-                        <span className="text-sm text-gray-500">2 days ago</span>
-                      </div>
-                      <p className="text-sm text-gray-700 mb-3">
-                        I'm having trouble understanding how to solve the integral in problem 3.4. Can someone explain the steps?
-                      </p>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center text-sm text-gray-500">
-                          <Users size={14} className="mr-1" />
-                          <span className="mr-3">Jane Smith</span>
-                          <MessageSquare size={14} className="mr-1" />
-                          <span>5 replies</span>
+                        <div className="flex items-center">
+                          <div className="w-8 h-8 bg-gray-300 rounded-full mr-2"></div>
+                          <div>
+                            <p className="font-medium">John Smith</p>
+                            <p className="text-xs text-gray-500">2 days ago</p>
+                          </div>
                         </div>
-                        <button className="text-navbar hover:text-button-secondary text-sm">
-                          View Thread
-                        </button>
+                        <button className="text-navbar text-sm">Reply</button>
+                      </div>
+                      <p className="text-gray-700">
+                        Can someone explain the concept from module 2 in more detail? I'm having trouble understanding it.
+                      </p>
+                      
+                      <div className="ml-8 mt-4 bg-gray-50 p-4 rounded-lg">
+                        <div className="flex justify-between mb-2">
+                          <div className="flex items-center">
+                            <div className="w-6 h-6 bg-gray-300 rounded-full mr-2"></div>
+                            <div>
+                              <p className="font-medium">Instructor</p>
+                              <p className="text-xs text-gray-500">1 day ago</p>
+                            </div>
+                          </div>
+                        </div>
+                        <p className="text-gray-700">
+                          Great question! In module 2, we're primarily focusing on... [answer continues]
+                        </p>
                       </div>
                     </div>
                     
-                    <div className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <div>
                       <div className="flex justify-between mb-2">
-                        <h3 className="font-medium">Derivative of ln(x) explanation</h3>
-                        <span className="text-sm text-gray-500">5 days ago</span>
-                      </div>
-                      <p className="text-sm text-gray-700 mb-3">
-                        Can someone provide a more intuitive explanation for why the derivative of ln(x) is 1/x? I understand the proof, but I'm looking for a more conceptual understanding.
-                      </p>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center text-sm text-gray-500">
-                          <Users size={14} className="mr-1" />
-                          <span className="mr-3">Michael Johnson</span>
-                          <MessageSquare size={14} className="mr-1" />
-                          <span>8 replies</span>
+                        <div className="flex items-center">
+                          <div className="w-8 h-8 bg-gray-300 rounded-full mr-2"></div>
+                          <div>
+                            <p className="font-medium">Sarah Johnson</p>
+                            <p className="text-xs text-gray-500">1 week ago</p>
+                          </div>
                         </div>
-                        <button className="text-navbar hover:text-button-secondary text-sm">
-                          View Thread
-                        </button>
+                        <button className="text-navbar text-sm">Reply</button>
                       </div>
-                    </div>
-                    
-                    <div className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                      <div className="flex justify-between mb-2">
-                        <h3 className="font-medium">Integration technique question</h3>
-                        <span className="text-sm text-gray-500">1 week ago</span>
-                      </div>
-                      <p className="text-sm text-gray-700 mb-3">
-                        When should I use substitution vs. integration by parts? I'm having trouble deciding which technique to apply for different problems.
+                      <p className="text-gray-700">
+                        I found a great resource related to this topic that might help others: [link]
                       </p>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center text-sm text-gray-500">
-                          <Users size={14} className="mr-1" />
-                          <span className="mr-3">David Wilson</span>
-                          <MessageSquare size={14} className="mr-1" />
-                          <span>12 replies</span>
-                        </div>
-                        <button className="text-navbar hover:text-button-secondary text-sm">
-                          View Thread
-                        </button>
-                      </div>
-                    </div>
-                    
-                    <div className="text-center mt-6">
-                      <button className="text-navbar hover:text-button-secondary font-medium">
-                        Load More Discussions
-                      </button>
                     </div>
                   </div>
                 </div>
               )}
-              
+
               {activeTab === 'notes' && (
                 <div className="bg-white rounded-lg shadow-md p-6">
-                  <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-xl font-semibold">My Notes</h2>
-                    <button className="bg-navbar text-white px-4 py-2 rounded-lg hover:bg-button-secondary transition-colors">
-                      Add New Note
+                  <h2 className="text-xl font-bold mb-4">My Notes</h2>
+                  <textarea 
+                    className="w-full border rounded-lg p-4 min-h-[300px]"
+                    placeholder="Write your notes here..."
+                  ></textarea>
+                  <div className="mt-4 flex justify-between">
+                    <button className="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg">
+                      Clear
                     </button>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <div className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                      <div className="flex justify-between mb-2">
-                        <h3 className="font-medium">Lecture 2.1 Notes</h3>
-                        <div className="flex gap-2">
-                          <button className="text-gray-500 hover:text-navbar">
-                            <FileText size={16} />
-                          </button>
-                          <button className="text-gray-500 hover:text-navbar">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                            </svg>
-                          </button>
-                        </div>
-                      </div>
-                      <p className="text-sm text-gray-700">
-                        Important points on derivatives:
-                        <br />
-                        - The derivative of a constant is 0
-                        <br />
-                        - Power rule: d/dx(x^n) = n*x^(n-1)
-                        <br />
-                        - Product rule: d/dx(f*g) = f'g + fg'
-                      </p>
-                      <div className="flex justify-between items-center mt-3 text-sm text-gray-500">
-                        <span>Last edited: 2 days ago</span>
-                        <div className="flex gap-2">
-                          <button className="text-navbar hover:text-button-secondary">Edit</button>
-                          <button className="text-red-500 hover:text-red-700">Delete</button>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                      <div className="flex justify-between mb-2">
-                        <h3 className="font-medium">Integration Techniques Summary</h3>
-                        <div className="flex gap-2">
-                          <button className="text-gray-500 hover:text-navbar">
-                            <FileText size={16} />
-                          </button>
-                          <button className="text-gray-500 hover:text-navbar">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                            </svg>
-                          </button>
-                        </div>
-                      </div>
-                      <p className="text-sm text-gray-700">
-                        Integration methods:
-                        <br />
-                        1. Direct integration (antiderivatives)
-                        <br />
-                        2. Substitution method (u-substitution)
-                        <br />
-                        3. Integration by parts: ∫u·dv = u·v - ∫v·du
-                        <br />
-                        4. Partial fractions for rational functions
-                      </p>
-                      <div className="flex justify-between items-center mt-3 text-sm text-gray-500">
-                        <span>Last edited: 1 week ago</span>
-                        <div className="flex gap-2">
-                          <button className="text-navbar hover:text-button-secondary">Edit</button>
-                          <button className="text-red-500 hover:text-red-700">Delete</button>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                      <div className="flex justify-between mb-2">
-                        <h3 className="font-medium">Questions for Next Study Group</h3>
-                        <div className="flex gap-2">
-                          <button className="text-gray-500 hover:text-navbar">
-                            <FileText size={16} />
-                          </button>
-                          <button className="text-gray-500 hover:text-navbar">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                            </svg>
-                          </button>
-                        </div>
-                      </div>
-                      <p className="text-sm text-gray-700">
-                        Topics to discuss:
-                        <br />
-                        - Applications of definite integrals
-                        <br />
-                        - How to approach volume problems
-                        <br />
-                        - Tips for recognizing which integration technique to use
-                      </p>
-                      <div className="flex justify-between items-center mt-3 text-sm text-gray-500">
-                        <span>Last edited: 3 days ago</span>
-                        <div className="flex gap-2">
-                          <button className="text-navbar hover:text-button-secondary">Edit</button>
-                          <button className="text-red-500 hover:text-red-700">Delete</button>
-                        </div>
-                      </div>
-                    </div>
+                    <button className="bg-navbar text-white px-4 py-2 rounded-lg">
+                      Save Notes
+                    </button>
                   </div>
                 </div>
               )}
