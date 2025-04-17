@@ -60,7 +60,8 @@ const TutorProfile = () => {
       try {
         const email = localStorage.getItem('teacherEmail');
         const teacherRes = await api.get(`/teacher/details/${email}`);
-        const classesRes = await api.get(`/classes/teacher/${teacherRes.data._id}`);
+        // const classesRes = await api.get(`/classes/teacher/${teacherRes.data._id}`);
+        const classesRes = await api.get(`/classes/teacher/${teacherRes.data._id}?status=scheduled`);
         
         setClasses(classesRes.data.map((cls: { _id: any; subject: any; studentId: { name: any; }; date: string | number | Date; time: any; }) => ({
           id: cls._id,
@@ -187,12 +188,6 @@ const TutorProfile = () => {
             <div className="grid md:grid-cols-3 gap-4">
               {classes.map((class_) => (
               <div key={class_.id} className="p-4 bg-background rounded-lg transform hover:scale-[1.02] transition-all duration-300">
-              {/* {[
-                { id: '1', time: '10:00 AM', subject: 'Physics', student: 'John Doe', date: '2023-10-01' },
-                { id: '2', time: '2:00 PM', subject: 'Mathematics', student: 'Jane Smith', date: '2023-10-01' },
-                { id: '3', time: '4:00 PM', subject: 'Physics', student: 'Mike Johnson', date: '2023-10-01' },
-              ].map((class_, index) => (
-                <div key={index} className="p-4 bg-background rounded-lg transform hover:scale-[1.02] transition-all duration-300"> */}
                   <div className="flex justify-between items-start mb-3">
                     <div>
                       <p className="font-medium">{class_.subject}</p>

@@ -15,7 +15,7 @@ const Login = () => {
     try {
       if (userType === 'admin') {
         // admin credentials
-        if (email === 'admin@aiconnect.com' && password === 'admin123') {
+        if (email === 'admin@gmail.com' && password === '123') {
           localStorage.setItem('adminEmail', email);
           navigate('/admin-dashboard');
         } else {

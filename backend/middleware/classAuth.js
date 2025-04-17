@@ -1,4 +1,6 @@
 // backend/middleware/classAuth.js
+const mongoose = require('mongoose');
+
 exports.verifyClassParticipant = async (req, res, next) => {
     try {
       const classId = req.params.classId;
@@ -15,4 +17,14 @@ exports.verifyClassParticipant = async (req, res, next) => {
     } catch (error) {
       res.status(500).json({ message: error.message });
     }
+  };
+
+  exports.validateClassId = (req, res, next) => {
+    if (!mongoose.Types.ObjectId.isValid(req.params.classId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid class ID format'
+      });
+    }
+    next();
   };

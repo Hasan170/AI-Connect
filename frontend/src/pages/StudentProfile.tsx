@@ -124,7 +124,8 @@ const StudentProfile = () => {
         const studentId = studentRes.data._id;
         
         // Then get scheduled classes
-        const classesRes = await api.get(`/classes/student/${studentId}`);
+        // const classesRes = await api.get(`/classes/student/${studentId}`);
+        const classesRes = await api.get(`/classes/student/${studentId}?status=scheduled`);
         setClasses(classesRes.data.map((cls: { _id: any; subject: any; status: any; date: string | number | Date; time: any; teacherId: { name: any; }; }) => ({
           id: cls._id,
           subject: cls.subject,
@@ -461,36 +462,6 @@ const StudentProfile = () => {
             </div>
           </div>
         )}
-
-        {/* Schedule Class Modal */}
-        {/* <ScheduleClassModal
-          isOpen={isScheduleModalOpen}
-          onClose={() => {
-            setIsScheduleModalOpen(false);
-            setSelectedClass(null);
-          } }
-          isReschedule={false}
-          subject={selectedClass?.subject} onSubmit={function (date: Date, time?: string): void {
-            throw new Error('Function not implemented.');
-          } }        />  */}
-
-        {/* Reschedule Class Modal */}
-        {/* <ScheduleClassModal
-          isOpen={isRescheduleModalOpen}
-          onClose={() => {
-            setIsRescheduleModalOpen(false);
-            setSelectedClass(null);
-          } }
-          isReschedule={true}
-          subject={selectedClass?.subject} onSubmit={function (date: Date, time?: string): void {
-            throw new Error('Function not implemented.');
-          } }           rescheduleData={selectedClass ? {
-            id: selectedClass.id || '',
-            date: selectedClass.date || '',
-            time: selectedClass.time || ''
-          } : undefined}
-        /> */}
-
         {/* Update both modals at the bottom of the file */}
         <ScheduleClassModal
           isOpen={isScheduleModalOpen}

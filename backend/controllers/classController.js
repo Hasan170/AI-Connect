@@ -1,8 +1,71 @@
 // backend/controllers/classController.js (new file)
 const mongoose = require('mongoose');
+const crypto = require('crypto');
 const ScheduledClass = require('../models/ScheduledClass');
 const ClassRequest = require('../models/ClassRequest');
 const StudentDetails = require('../models/StudentDetails');
+
+// exports.completeClass = async (req, res) => {
+//   try {
+//     const updatedClass = await ScheduledClass.findByIdAndUpdate(
+//       req.params.classId,
+//       { status: 'completed' },
+//       { new: true }
+//     );
+//     res.json({ success: true, data: updatedClass });
+//   } catch (error) {
+//     res.status(500).json({ success: false, message: error.message });
+//   }
+// };
+
+exports.completeClass = async (req, res) => {
+  try {
+    const { classId } = req.params;
+
+    // Add status validation
+    const existingClass = await ScheduledClass.findById(classId);
+    if (existingClass.status === 'completed') {
+      return res.status(400).json({
+        success: false,
+        message: 'Class already completed'
+      });
+    }
+
+    // Validate class ID format
+    if (!mongoose.Types.ObjectId.isValid(classId)) {
+      return res.status(400).json({ 
+        success: false,
+        message: 'Invalid class ID format' 
+      });
+    }
+
+    const updatedClass = await ScheduledClass.findByIdAndUpdate(
+      classId,
+      { status: 'completed' },
+      { new: true, runValidators: true }
+    ).populate('studentId teacherId', 'name email');
+
+    if (!updatedClass) {
+      return res.status(404).json({
+        success: false,
+        message: 'Class not found'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: updatedClass
+    });
+
+  } catch (error) {
+    console.error('[COMPLETE CLASS ERROR]', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to complete class',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
 
 exports.scheduleClass = async (req, res) => {
   try {
@@ -34,7 +97,9 @@ exports.scheduleClass = async (req, res) => {
     }
 
     // 4. Create meeting ID and link first
-    const meetingId = `class-${classRequest._id}-${Date.now()}`;
+    // const meetingId = `class-${classRequest._id}-${Date.now()}`;
+    const randomString = crypto.randomBytes(12).toString('hex');
+    const meetingId = `private-${classRequest._id}-${Date.now()}-${randomString}`;
     const meetingLink = `https://meet.jit.si/${meetingId}`;
 
     // 5. Create scheduled class with proper date handling
