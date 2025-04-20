@@ -329,7 +329,7 @@ const MyCourses: React.FC = () => {
   const handleQuizSubmit = async () => {
     try {
       // Get user info from localStorage
-      const userEmail = localStorage.getItem('userEmail');
+      const userEmail = localStorage.getItem('studentEmail');
       const studentName = localStorage.getItem('userName') || 'Student';
       const studentGrade = localStorage.getItem('userGrade') || '';
       const studentBoard = localStorage.getItem('userBoard') || '';
