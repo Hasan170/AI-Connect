@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Backend API URL 
-const API_URL = 'http://localhost:5001/api/scores';
+const API_URL = 'http://localhost:5001/api/courses/score';
 
 // ALWAYS use online mode - the database is working now
 const CONNECT_TO_BACKEND = true;
@@ -110,16 +110,25 @@ export const submitAssessmentScore = async (
   score: number,
   maxScore: number,
   courseName?: string,
-  percentageScore?: number
+  percentageScore?: number,
+  subject?: string
 ): Promise<CourseScore> => {
   try {
+    // Get additional student info from localStorage
+    const studentName = localStorage.getItem('userName') || 'Student';
+    const studentGrade = localStorage.getItem('userGrade') || '';
+    const studentBoard = localStorage.getItem('userBoard') || '';
+    
     console.log(`Submitting score to ${API_URL}/submit`, {
       studentEmail, courseId, moduleId, assessmentId, 
-      assessmentType, score, maxScore, courseName, percentageScore
+      assessmentType, score, maxScore, courseName, percentageScore, subject
     });
     
     const response = await axios.post(`${API_URL}/submit`, {
       studentEmail,
+      studentName,
+      studentGrade,
+      studentBoard, 
       courseId,
       moduleId,
       assessmentId,
@@ -127,7 +136,8 @@ export const submitAssessmentScore = async (
       score,
       maxScore,
       courseName,
-      percentageScore
+      percentageScore,
+      subject
     });
     
     console.log('Score submission response:', response.data);

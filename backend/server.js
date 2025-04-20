@@ -5,6 +5,7 @@ const studentRoutes = require('./routes/studentRoutes');
 const teacherRoutes = require('./routes/teacherRoutes');
 const requestRoutes = require('./routes/requestRoutes');
 const classRoutes = require('./routes/classRoutes');
+const courseScoreRoutes = require('./routes/courseScoreRoutes');
 
 const app = express();
 app.use(cors());
@@ -19,6 +20,12 @@ app.use('/api/student', studentRoutes);
 app.use('/api/teacher', teacherRoutes);
 app.use('/api/requests', requestRoutes);
 app.use('/api/classes', classRoutes);
+app.use('/api/courses/score', courseScoreRoutes);
+
+// Add API status route for connectivity testing
+app.get('/api/status', (req, res) => {
+  res.status(200).json({ status: 'API is running' });
+});
 
 app.use((err, req, res, next) => {
     console.error('Unhandled Error:', err.stack);

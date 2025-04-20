@@ -37,6 +37,7 @@ const courseScoreSchema = new mongoose.Schema({
   },
   courseId: { type: String, required: true },
   courseName: { type: String, default: 'Unknown Course' },
+  subject: { type: String, default: '' },
   percentageScore: { type: Number, default: 0 },
   totalScore: { type: Number, default: 0 },
   submissionId: { type: String, index: true },
