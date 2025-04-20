@@ -326,10 +326,23 @@ const MyCourses: React.FC = () => {
     );
   };
 
+  // const handleQuizSubmit = async () => {
+  //   try {
+  //     // Get user info from localStorage
+  //     const userEmail = localStorage.getItem('userEmail');
+  //     const studentName = localStorage.getItem('userName') || 'Student';
+  //     const studentGrade = localStorage.getItem('userGrade') || '';
+  //     const studentBoard = localStorage.getItem('userBoard') || '';
+      
+  //     if (!userEmail) {
+  //       alert("You must be logged in to submit quizzes.");
+  //       return;
+  //     }
+
   const handleQuizSubmit = async () => {
     try {
-      // Get user info from localStorage
-      const userEmail = localStorage.getItem('userEmail');
+      // Get user info from localStorage - check both possible keys
+      const userEmail = localStorage.getItem('userEmail') || localStorage.getItem('studentEmail');
       const studentName = localStorage.getItem('userName') || 'Student';
       const studentGrade = localStorage.getItem('userGrade') || '';
       const studentBoard = localStorage.getItem('userBoard') || '';
@@ -338,6 +351,8 @@ const MyCourses: React.FC = () => {
         alert("You must be logged in to submit quizzes.");
         return;
       }
+      
+      // Rest of the function remains the same...
 
       // Calculate score
       const quizResult = calculateQuizScore();
