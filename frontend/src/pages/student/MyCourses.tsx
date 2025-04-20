@@ -341,6 +341,7 @@ const MyCourses: React.FC = () => {
 
   const handleQuizSubmit = async () => {
     try {
+
       // Get user info from localStorage - check both possible keys
       const userEmail = localStorage.getItem('userEmail') || localStorage.getItem('studentEmail');
       const studentName = localStorage.getItem('userName') || 'Student';
