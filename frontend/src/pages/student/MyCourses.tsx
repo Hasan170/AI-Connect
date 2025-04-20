@@ -18,10 +18,16 @@ import {
   Check
 } from 'lucide-react';
 import StudentSidebar from '../../components/StudentSidebar';
-import { Course, Lecture, coursesData } from './coursesData';
+import { Course, Lecture as BaseLecture, coursesData } from './coursesData';
+import { submitAssessmentScore } from '../../services/courseScoreService';
 
 interface ExpandedModules {
   [key: string]: boolean;
+}
+
+// Extend the base Lecture type to include moduleId
+interface Lecture extends BaseLecture {
+  moduleId?: string;
 }
 
 interface QuizQuestion {
@@ -86,8 +92,14 @@ const MyCourses: React.FC = () => {
     }));
   };
 
-  const handleLectureClick = (lecture: Lecture) => {
-    setCurrentLecture(lecture);
+  const handleLectureClick = (lecture: Lecture, moduleId: string) => {
+    // Add moduleId to the lecture object
+    const lectureWithModuleId = {
+      ...lecture,
+      moduleId: moduleId
+    };
+    
+    setCurrentLecture(lectureWithModuleId);
     
     if (lecture.type === 'video' && lecture.url) {
       setCurrentVideo(lecture.url);
@@ -314,9 +326,53 @@ const MyCourses: React.FC = () => {
     );
   };
 
-  const handleQuizSubmit = () => {
-    setQuizSubmitted(true);
-    // You would typically send the results to a server here
+  const handleQuizSubmit = async () => {
+    try {
+      // Get user info from localStorage
+      const userEmail = localStorage.getItem('userEmail');
+      const studentName = localStorage.getItem('userName') || 'Student';
+      const studentGrade = localStorage.getItem('userGrade') || '';
+      const studentBoard = localStorage.getItem('userBoard') || '';
+      
+      if (!userEmail) {
+        alert("You must be logged in to submit quizzes.");
+        return;
+      }
+
+      // Calculate score
+      const quizResult = calculateQuizScore();
+      
+      // Get subject information from the course
+      const subject = course?.subject || '';
+      
+      console.log("Submitting quiz data for:", userEmail, courseId);
+      console.log("Course subject:", subject);
+      
+      // Send to backend using the service
+      const response = await submitAssessmentScore(
+        userEmail,
+        courseId || '',
+        currentLecture?.moduleId || '',
+        currentLecture?.id || '',
+        (currentLecture?.type as 'quiz' | 'assignment' | 'project') || 'quiz',
+        quizResult.score,
+        quizResult.total,
+        course?.title || '',
+        quizResult.percentage,
+        subject
+      );
+      
+      // For debugging - we should see what's stored in the database
+      console.log("Quiz submission successful:", response);
+      
+      // Show toast/alert
+      alert(`Quiz submitted successfully! You scored ${quizResult.score}/${quizResult.total} (${quizResult.percentage}%)`);
+      
+      setQuizSubmitted(true);
+    } catch (error: any) {
+      console.error("Error submitting quiz:", error);
+      alert("Failed to submit quiz: " + (error.message || "Unknown error"));
+    }
   };
 
   const calculateQuizScore = () => {
@@ -520,7 +576,7 @@ const MyCourses: React.FC = () => {
                                 className={`p-4 hover:bg-gray-100 cursor-pointer flex justify-between items-center ${
                                   (currentVideo === lecture.url || (currentLecture?.id === lecture.id && showQuiz)) ? 'bg-blue-50' : ''
                                 }`}
-                                onClick={() => handleLectureClick(lecture)}
+                                onClick={() => handleLectureClick(lecture, module.id)}
                               >
                                 <div className="flex items-center">
                                   {getLectureIcon(lecture.type)}

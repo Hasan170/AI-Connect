@@ -38,7 +38,8 @@ exports.submitAssessmentScore = async (req, res) => {
       score, 
       maxScore,
       courseName,
-      percentageScore
+      percentageScore,
+      subject
     } = req.body;
 
     // Validate all required fields are present
@@ -70,6 +71,7 @@ exports.submitAssessmentScore = async (req, res) => {
       studentBoard: studentExists.board || '',
       courseId,
       courseName,
+      subject: subject || '',
       percentageScore,
       totalScore: score,
       submissionId: `${studentEmail}-${courseId}-${Date.now()}`,
