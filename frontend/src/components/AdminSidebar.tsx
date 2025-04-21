@@ -14,6 +14,7 @@ const AdminSidebar = () => {
   const menuItems = [
     { title: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/admin-dashboard' },
     { title: 'Students', icon: <GraduationCap size={20} />, path: '/admin/students' },
+    { title: 'Subject Requests', icon: <BookOpen size={20} />, path: '/admin/subject-requests' },
     { title: 'Teachers', icon: <Users size={20} />, path: '/admin/teachers' },
     { title: 'Resources', icon: <BookOpen size={20} />, path: '/admin/resources' },
     { title: 'Settings', icon: <Settings size={20} />, path: '/admin/settings' },

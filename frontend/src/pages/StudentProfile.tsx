@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Line } from 'react-chartjs-2';
-import { Edit, Bell, Book, Calendar, X, CheckCircle, Clock, User, Video } from 'lucide-react';
+import { Edit, Bell, Book, Calendar, X, CheckCircle, Clock, User, Video, Plus } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../api';
 import StudentSidebar from '../components/StudentSidebar';
@@ -30,6 +30,7 @@ const StudentProfile = () => {
   const [isNotebookOpen, setIsNotebookOpen] = useState(false);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [isRescheduleModalOpen, setIsRescheduleModalOpen] = useState(false);
+  const [isSubjectModalOpen, setIsSubjectModalOpen] = useState(false);
   const [selectedClass, setSelectedClass] = useState<ClassData | null>(null);
   const [enrolledSubjects, setEnrolledSubjects] = useState<string[]>([]);
   const [classRequests, setClassRequests] = useState<ClassData[]>([]);
@@ -42,7 +43,17 @@ const StudentProfile = () => {
     dob: '',
   });
   const [subjects, setSubjects] = useState<string[]>([]);
+  const [newSubjectRequest, setNewSubjectRequest] = useState({
+    subject: '',
+    reason: ''
+  });
 
+  // Available subjects for selection
+  const availableSubjects = [
+    'Mathematics', 'Physics', 'Chemistry', 'Biology', 
+    'English', 'History', 'Geography', 'Computer Science',
+    'Economics', 'Political Science', 'Psychology'
+  ];
 
   // Replace the classesData array with state
   const [classes, setClasses] = useState<ClassData[]>([]);
@@ -74,6 +85,7 @@ const StudentProfile = () => {
 
         // Set subjects for display
         setSubjects(subjects);
+        
 
         // Fetch class requests and scheduled classes
         const requestsRes = await api.get(`/requests/student/${student._id}`);
@@ -161,6 +173,8 @@ const StudentProfile = () => {
     ],
   };
 
+  
+
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -221,6 +235,35 @@ const StudentProfile = () => {
     setIsRescheduleModalOpen(true);
   };
 
+  const handleSubjectRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const email = localStorage.getItem('studentEmail');
+      if (!email) {
+        alert('You must be logged in to request a subject');
+        return;
+      }
+
+      const studentRes = await api.get(`/student/details/${email}`);
+      const studentId = studentRes.data._id;
+
+      await api.post('/requests/subject', {
+        studentId,
+        subject: newSubjectRequest.subject,
+        reason: newSubjectRequest.reason
+      });
+
+      alert('Subject request submitted successfully!');
+      setIsSubjectModalOpen(false);
+      setNewSubjectRequest({
+        subject: '',
+        reason: ''
+      });
+    } catch (error: any) {
+      console.error('Error submitting subject request:', error);
+      alert(`Failed to submit request: ${error.response?.data?.message || error.message}`);
+    }
+  };
   
   return (
     <div className="flex">
@@ -284,6 +327,13 @@ const StudentProfile = () => {
                     <p className="text-gray-500">No subjects enrolled</p>
                   )}
                   </div>
+                  <button
+                    onClick={() => setIsSubjectModalOpen(true)}
+                    className="mt-3 text-navbar hover:text-button-secondary flex items-center gap-1 text-sm"
+                  >
+                    <Plus size={16} />
+                    Request new subject
+                  </button>
                 </div>
               </div>
             </div>
@@ -314,10 +364,6 @@ const StudentProfile = () => {
                     <h3 className="text-lg font-semibold text-text-primary">
                       {classItem.subject || 'No Subject'}
                     </h3>
-              {/* {classRequests.map((classItem, index) => (
-                <div key={index} className="bg-white p-6 rounded-lg shadow-md transform hover:scale-[1.02] transition-all duration-300">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-text-primary">{classItem.subject}</h3> */}
                     <Book className="text-navbar" size={20} />
                   </div>
                   {classItem.status === 'scheduled' ? (
@@ -357,12 +403,6 @@ const StudentProfile = () => {
                 ) : (
                   <>
                     <p className="text-gray-500 mb-4">No class scheduled</p>
-                      {/* <button
-                        onClick={() => handleScheduleClass(classItem, new Date())}
-                        className="w-full bg-navbar text-white py-2 rounded-lg hover:bg-button-secondary transition-colors transform hover:scale-[1.02]"
-                      >
-                        Request Class
-                      </button> */}
                       <button
                         onClick={() => {
                           setSelectedClass(classItem);
@@ -462,7 +502,61 @@ const StudentProfile = () => {
             </div>
           </div>
         )}
-        {/* Update both modals at the bottom of the file */}
+
+        {/* Subject Request Modal */}
+        {isSubjectModalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg shadow-lg w-96 transform scale-100 transition-transform duration-300">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-semibold">Request New Subject</h3>
+                <button 
+                  onClick={() => setIsSubjectModalOpen(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              <form onSubmit={handleSubjectRequest} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+                  <select
+                    value={newSubjectRequest.subject}
+                    onChange={(e) => setNewSubjectRequest({...newSubjectRequest, subject: e.target.value})}
+                    className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-navbar focus:outline-none"
+                    required
+                  >
+                    <option value="">Select a subject</option>
+                    {availableSubjects
+                      .filter(subject => !subjects.includes(subject))
+                      .map(subject => (
+                        <option key={subject} value={subject}>{subject}</option>
+                      ))
+                    }
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Reason for Request</label>
+                  <textarea
+                    value={newSubjectRequest.reason}
+                    onChange={(e) => setNewSubjectRequest({...newSubjectRequest, reason: e.target.value})}
+                    className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-navbar focus:outline-none"
+                    rows={3}
+                    placeholder="Why do you want to add this subject?"
+                    required
+                  ></textarea>
+                </div>
+                <button
+                  type="submit"
+                  className="w-full bg-navbar text-white py-2 rounded-lg hover:bg-button-secondary transition-colors transform hover:scale-[1.02]"
+                >
+                  Submit Request
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Schedule/Reschedule Class Modals */}
         <ScheduleClassModal
           isOpen={isScheduleModalOpen}
           onClose={() => {
