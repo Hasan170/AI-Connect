@@ -23,6 +23,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import Students from './pages/admin/Students';
 import Teachers from './pages/admin/Teachers';
 import Resources from './pages/admin/Resources';
+import SubjectRequests from './pages/admin/SubjectRequests';
 
 // Student pages
 import MyClasses from './pages/student/MyClasses';
@@ -44,7 +45,8 @@ function App() {
     '/admin/settings', '/student/classes', '/student/schedule', 
     '/student/assignments', '/student/teachers', '/student/resources', 
     '/student/fee-details', '/student/feedback', '/student/MyCourses', 
-    '/class/:classId', '/student/progress', '/student/Courses'
+    '/class/:classId', '/student/progress', '/student/Courses', 
+    '/admin/subject-requests',
   ].some(path => location.pathname.startsWith(path));
 
   return (
@@ -69,6 +71,7 @@ function App() {
           <Route path="/admin/students" element={<Students />} />
           <Route path="/admin/teachers" element={<Teachers />} />
           <Route path="/admin/resources" element={<Resources />} />
+          <Route path="/admin/subject-requests" element={<SubjectRequests />} />
 
           {/* Student routes */}
           <Route path="/student/classes" element={<MyClasses />} />
