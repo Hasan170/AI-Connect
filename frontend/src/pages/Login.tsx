@@ -24,11 +24,40 @@ const Login = () => {
       } else {
         const endpoint = userType === 'student' ? '/student/login' : '/teacher/login';
         const response = await api.post(endpoint, { email, password });
+        console.log("Login response:", response.data);
 
         if (response.data.message === 'Student logged in successfully' || 
             response.data.message === 'Teacher logged in successfully') {
+          
           if (userType === 'student') {
-            localStorage.setItem('studentEmail', email);
+            // Store all student data consistently
+            const studentData = response.data.student;
+            
+            // Log the data we're about to store
+            console.log("Storing student data in localStorage:", studentData);
+            
+            // Store complete user object
+            localStorage.setItem('currentUser', JSON.stringify(studentData));
+            
+            // Also store individual fields for backward compatibility
+            localStorage.setItem('studentEmail', studentData.email);
+            localStorage.setItem('userEmail', studentData.email);
+            localStorage.setItem('userName', studentData.name);
+            localStorage.setItem('name', studentData.name);
+            localStorage.setItem('userGrade', studentData.grade || '');
+            localStorage.setItem('grade', studentData.grade || '');
+            localStorage.setItem('userBoard', studentData.board || '');
+            localStorage.setItem('board', studentData.board || '');
+            localStorage.setItem('userId', studentData.id || '');
+            
+            // Verify data was stored correctly
+            console.log("Verifying localStorage data after login:");
+            console.log("- currentUser:", localStorage.getItem('currentUser'));
+            console.log("- studentEmail:", localStorage.getItem('studentEmail'));
+            console.log("- userEmail:", localStorage.getItem('userEmail'));
+            console.log("- userName:", localStorage.getItem('userName'));
+            console.log("- name:", localStorage.getItem('name'));
+            
             navigate('/student-profile');
           } else if (userType === 'tutor') {
             localStorage.setItem('teacherEmail', email);

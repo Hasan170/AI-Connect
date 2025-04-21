@@ -114,21 +114,43 @@ export const submitAssessmentScore = async (
   subject?: string
 ): Promise<CourseScore> => {
   try {
-    // Get additional student info from localStorage
-    const studentName = localStorage.getItem('userName') || 'Student';
-    const studentGrade = localStorage.getItem('userGrade') || '';
-    const studentBoard = localStorage.getItem('userBoard') || '';
-    
-    console.log(`Submitting score to ${API_URL}/submit`, {
-      studentEmail, courseId, moduleId, assessmentId, 
-      assessmentType, score, maxScore, courseName, percentageScore, subject
-    });
-    
+    console.log(`Submitting score with email: ${studentEmail}`);
+
+    // Get the actual student data from localStorage (check all possible keys)
+    const userName = localStorage.getItem('userName');
+    const name = localStorage.getItem('name');
+    console.log('Possible name values found in localStorage:', { userName, name });
+
+    // Try to get the name from currentUser if it exists
+    let currentUserName = null;
+    const currentUserStr = localStorage.getItem('currentUser');
+    if (currentUserStr) {
+      try {
+        const currentUser = JSON.parse(currentUserStr);
+        currentUserName = currentUser.name;
+        console.log('Name from currentUser:', currentUserName);
+      } catch (e) {
+        console.error('Error parsing currentUser:', e);
+      }
+    }
+
+    // Assemble student data, prioritizing currentUser, then userName, then name
+    const studentData = {
+      studentEmail: studentEmail,
+      studentName: currentUserName || userName || name || 'Student',
+      studentGrade: localStorage.getItem('userGrade') || localStorage.getItem('grade') || '',
+      studentBoard: localStorage.getItem('userBoard') || localStorage.getItem('board') || '',
+    };
+
+    console.log('Final student data being sent:', studentData);
+
+    // Submit the score with the actual student values
     const response = await axios.post(`${API_URL}/submit`, {
-      studentEmail,
-      studentName,
-      studentGrade,
-      studentBoard, 
+      studentEmail: studentData.studentEmail,
+      studentName: studentData.studentName,
+      studentGrade: studentData.studentGrade,
+      studentBoard: studentData.studentBoard,
+      // Don't include studentId so backend will create a new one
       courseId,
       moduleId,
       assessmentId,
@@ -140,7 +162,7 @@ export const submitAssessmentScore = async (
       subject
     });
     
-    console.log('Score submission response:', response.data);
+    console.log('Score submission success!');
     return response.data.courseScore;
   } catch (error: any) {
     // Log error and rethrow

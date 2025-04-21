@@ -7,13 +7,36 @@ const StudentRequest = require('../models/StudentRequest');
 const loginStudent = async (req, res) => {
   const { email, password } = req.body;
   try {
-    const student = await StudentCredentials.findOne({ email, password });
-    if (student) {
-      res.status(200).json({ message: 'Student logged in successfully', student });
-    } else {
-      res.status(404).json({ error: 'Invalid email or password' });
+    // First verify credentials
+    const studentCred = await StudentCredentials.findOne({ email, password });
+    if (!studentCred) {
+      return res.status(404).json({ error: 'Invalid email or password' });
     }
+
+    // Fetch complete student details to return to the client
+    const studentDetails = await StudentDetails.findOne({ email });
+    if (!studentDetails) {
+      // This should not happen if the database is consistent
+      return res.status(500).json({ 
+        error: 'Student details not found for authenticated user',
+        message: 'Database inconsistency detected'
+      });
+    }
+
+    // Return the complete student information
+    res.status(200).json({ 
+      message: 'Student logged in successfully', 
+      student: {
+        id: studentDetails._id,
+        email: studentDetails.email,
+        name: studentDetails.name,
+        grade: studentDetails.grade,
+        board: studentDetails.board,
+        subjects: studentDetails.subjects
+      }
+    });
   } catch (err) {
+    console.error('Login error:', err);
     res.status(500).json({ error: err.message });
   }
 };
@@ -32,6 +55,49 @@ const getStudentDetails = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };  
+
+// Verify if a student exists (useful for debugging)
+const findStudentByEmail = async (req, res) => {
+  const { email } = req.params;
+  if (!email) {
+    return res.status(400).json({ error: 'Email parameter is required' });
+  }
+  
+  try {
+    // Try exact match first
+    let student = await StudentDetails.findOne({ email });
+    
+    // If not found, try case-insensitive match
+    if (!student) {
+      const normalizedEmail = email.toLowerCase().trim();
+      student = await StudentDetails.findOne({ 
+        email: { $regex: new RegExp(`^${normalizedEmail}$`, 'i') } 
+      });
+    }
+    
+    // List all students in database to help debug
+    const allStudents = await StudentDetails.find({}, 'email name');
+    
+    if (student) {
+      res.status(200).json({ 
+        found: true, 
+        student,
+        message: 'Student found in database',
+        allStudents
+      });
+    } else {
+      res.status(404).json({ 
+        found: false, 
+        message: 'Student not found in database',
+        searchedEmail: email,
+        allStudents
+      });
+    }
+  } catch (err) {
+    console.error('Error finding student:', err);
+    res.status(500).json({ error: err.message });
+  }
+};
 
 // Create student credentials & details (Admin Action)
 const createStudent = async (req, res) => {
@@ -77,4 +143,4 @@ const createStudent = async (req, res) => {
   }
 };
 
-module.exports = { loginStudent, getStudentDetails, createStudent };
+module.exports = { loginStudent, getStudentDetails, findStudentByEmail, createStudent };

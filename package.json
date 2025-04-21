@@ -3,5 +3,8 @@
     "jszip": "^3.10.1",
     "react-calendar": "^5.1.0",
     "react-icons": "^5.5.0"
+  },
+  "devDependencies": {
+    "axios-mock-adapter": "^2.1.0"
   }
 }

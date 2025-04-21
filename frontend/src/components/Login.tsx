@@ -33,7 +33,7 @@ const Login: React.FC = () => {
         throw new Error(data.message || 'Authentication failed');
       }
       
-      console.log('Login successful:', data);
+      console.log('Login successful - raw response:', data);
       
       // Store authentication data
       const userData = {
@@ -45,12 +45,34 @@ const Login: React.FC = () => {
         role: 'student'
       };
       
-      // Store authentication info in localStorage
-      localStorage.setItem('token', 'auth-token-' + Date.now());
-      localStorage.setItem('currentUser', JSON.stringify(userData));
-      localStorage.setItem('userEmail', userData.email);
+      console.log('Processed user data to store:', userData);
       
-      console.log('User data stored:', userData);
+      // Store authentication info in localStorage consistently
+      localStorage.setItem('token', 'auth-token-' + Date.now());
+      
+      // Store the complete user object
+      localStorage.setItem('currentUser', JSON.stringify(userData));
+      
+      // Store individual fields for backward compatibility with all possible key names
+      localStorage.setItem('userEmail', userData.email);
+      localStorage.setItem('studentEmail', userData.email);
+      localStorage.setItem('userName', userData.name);
+      localStorage.setItem('name', userData.name);
+      localStorage.setItem('userGrade', userData.grade || '');
+      localStorage.setItem('grade', userData.grade || '');
+      localStorage.setItem('userBoard', userData.board || '');
+      localStorage.setItem('board', userData.board || '');
+      localStorage.setItem('userId', userData.id || '');
+      
+      // Verify data was stored correctly
+      console.log("Verifying localStorage data after login:");
+      console.log("- currentUser:", localStorage.getItem('currentUser'));
+      console.log("- studentEmail:", localStorage.getItem('studentEmail'));
+      console.log("- userEmail:", localStorage.getItem('userEmail'));
+      console.log("- userName:", localStorage.getItem('userName'));
+      console.log("- name:", localStorage.getItem('name'));
+      
+      console.log('User data stored in localStorage');
       
       // Redirect to dashboard
       navigate('/student/dashboard');
