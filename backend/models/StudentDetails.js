@@ -13,4 +13,18 @@ const studentDetailsSchema = new mongoose.Schema({
   ]
 });
 
+// Ensure emails are consistently stored and queried in lowercase
+studentDetailsSchema.pre('save', function(next) {
+  if (this.email) {
+    this.email = this.email.toLowerCase().trim();
+  }
+  next();
+});
+
+// Create a case-insensitive index on email field
+studentDetailsSchema.index({ email: 1 }, { 
+  unique: true, 
+  collation: { locale: 'en', strength: 2 } // Case-insensitive index
+});
+
 module.exports = mongoose.model('studentdetail', studentDetailsSchema);

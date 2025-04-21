@@ -30,7 +30,6 @@ exports.submitAssessmentScore = async (req, res) => {
       studentName,
       studentGrade,
       studentBoard,
-      studentId,
       courseId, 
       moduleId, 
       assessmentId, 
@@ -42,33 +41,21 @@ exports.submitAssessmentScore = async (req, res) => {
       subject
     } = req.body;
 
-    // Validate all required fields are present
+    // Basic validation
     if (!studentEmail || !courseId || !moduleId || !assessmentId || 
         assessmentType === undefined || score === undefined || maxScore === undefined) {
-      console.error('Missing required fields:', req.body);
       return res.status(400).json({ 
-        error: 'Missing required fields', 
-        details: 'All fields must be provided by the client'
+        error: 'Missing required fields'
       });
     }
 
-    // VERIFY STUDENT EXISTS - Only allow scores for real students
-    const studentExists = await StudentDetails.findOne({ email: studentEmail });
-    if (!studentExists) {
-      console.error(`Student with email ${studentEmail} not found in database`);
-      return res.status(404).json({
-        error: 'Student not found',
-        message: 'Only registered students can submit quizzes'
-      });
-    }
-
-    // Create score record using verified student data from database
+    // Create score record using client-provided student data
     const courseScore = new CourseScore({
-      studentId: studentExists._id, // Use ID from database
-      studentEmail: studentExists.email, // Use email from database
-      studentName: studentExists.name, // Use name from database
-      studentGrade: studentExists.grade || '',
-      studentBoard: studentExists.board || '',
+      // Don't try to set studentId - let MongoDB create one
+      studentEmail: studentEmail, 
+      studentName: studentName || 'Student',
+      studentGrade: studentGrade || '',
+      studentBoard: studentBoard || '',
       courseId,
       courseName,
       subject: subject || '',
@@ -88,7 +75,10 @@ exports.submitAssessmentScore = async (req, res) => {
 
     // Save and return response
     const savedScore = await courseScore.save();
-    console.log('Score saved successfully with ID:', savedScore._id);
+    console.log('Score saved successfully:', {
+      name: savedScore.studentName,
+      email: savedScore.studentEmail
+    });
 
     res.status(200).json({ 
       message: 'Score submitted successfully',

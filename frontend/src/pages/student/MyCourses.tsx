@@ -326,47 +326,49 @@ const MyCourses: React.FC = () => {
     );
   };
 
-  // const handleQuizSubmit = async () => {
-  //   try {
-  //     // Get user info from localStorage
-  //     const userEmail = localStorage.getItem('userEmail');
-  //     const studentName = localStorage.getItem('userName') || 'Student';
-  //     const studentGrade = localStorage.getItem('userGrade') || '';
-  //     const studentBoard = localStorage.getItem('userBoard') || '';
-      
-  //     if (!userEmail) {
-  //       alert("You must be logged in to submit quizzes.");
-  //       return;
-  //     }
-
   const handleQuizSubmit = async () => {
     try {
-
-      // Get user info from localStorage - check both possible keys
-      const userEmail = localStorage.getItem('userEmail') || localStorage.getItem('studentEmail');
-      const studentName = localStorage.getItem('userName') || 'Student';
-      const studentGrade = localStorage.getItem('userGrade') || '';
-      const studentBoard = localStorage.getItem('userBoard') || '';
+      // Log all localStorage keys and values for debugging
+      console.log("------- QUIZ SUBMISSION - STORAGE DEBUG -------");
+      console.log("localStorage keys:", Object.keys(localStorage));
       
-      if (!userEmail) {
+      // Log the actual values of key localStorage items
+      console.log("studentEmail:", localStorage.getItem('studentEmail'));
+      console.log("userEmail:", localStorage.getItem('userEmail'));
+      console.log("userName:", localStorage.getItem('userName'));
+      console.log("userGrade:", localStorage.getItem('userGrade'));
+      console.log("userBoard:", localStorage.getItem('userBoard'));
+      
+      // Try to parse currentUser if it exists
+      const currentUserStr = localStorage.getItem('currentUser');
+      if (currentUserStr) {
+        try {
+          const currentUser = JSON.parse(currentUserStr);
+          console.log("currentUser parsed:", currentUser);
+        } catch (e) {
+          console.error("Error parsing currentUser:", e);
+        }
+      }
+      
+      // Directly grab email from localStorage - simplest approach
+      const studentEmail = localStorage.getItem('studentEmail');
+      
+      if (!studentEmail) {
         alert("You must be logged in to submit quizzes.");
         return;
       }
       
-      // Rest of the function remains the same...
-
       // Calculate score
       const quizResult = calculateQuizScore();
       
       // Get subject information from the course
       const subject = course?.subject || '';
       
-      console.log("Submitting quiz data for:", userEmail, courseId);
-      console.log("Course subject:", subject);
+      console.log("Submitting quiz with email:", studentEmail);
       
-      // Send to backend using the service
+      // Directly send to backend using the service with minimal data
       const response = await submitAssessmentScore(
-        userEmail,
+        studentEmail,
         courseId || '',
         currentLecture?.moduleId || '',
         currentLecture?.id || '',
@@ -378,8 +380,7 @@ const MyCourses: React.FC = () => {
         subject
       );
       
-      // For debugging - we should see what's stored in the database
-      console.log("Quiz submission successful:", response);
+      console.log("Quiz submitted successfully");
       
       // Show toast/alert
       alert(`Quiz submitted successfully! You scored ${quizResult.score}/${quizResult.total} (${quizResult.percentage}%)`);
