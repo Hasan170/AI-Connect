@@ -183,8 +183,15 @@ export const getStudentScores = async (studentEmail: string): Promise<CourseScor
 };
 
 // Get score for a specific course - simplified
-export const getCourseScore = async (studentEmail: string, courseId: string): Promise<CourseScore> => {
+export const getCourseScore = async (studentEmail: string, courseId: string): Promise<CourseScore | CourseScore[]> => {
   try {
+    // If courseId is "all", fetch all scores for the student
+    if (courseId === "all") {
+      const response = await axios.get(`${API_URL}/student/${studentEmail}`);
+      return response.data;
+    }
+    
+    // Otherwise fetch a specific course score
     const response = await axios.get(`${API_URL}/student/${studentEmail}/course/${courseId}`);
     return response.data;
   } catch (error: any) {

@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import StudentSidebar from '../../components/StudentSidebar';
 import { Course, Lecture as BaseLecture, coursesData } from './coursesData';
-import { submitAssessmentScore } from '../../services/courseScoreService';
+import { submitAssessmentScore } from '../../../../backend/services/courseScoreService';
 
 interface ExpandedModules {
   [key: string]: boolean;

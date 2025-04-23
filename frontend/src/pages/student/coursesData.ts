@@ -2488,7 +2488,7 @@ export const coursesData: Record<string, Course> = {
 
 '5': {
   id: '5',
-  title: 'Advanced Arithmetic - Intermediate',
+  title: 'Fundamentals of Arithmetic - Intermediate',
   subject: 'Mathematics',
   instructor: 'Prof. Jessica Martinez',
   thumbnail: 'https://images.unsplash.com/photo-1616400619175-5beda3a17896',
