@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { BookOpen, Clock, Star, Users, AlertCircle, Info, RefreshCw } from 'lucide-react';
+import { BookOpen, Clock, Star, Users, AlertCircle, Info, RefreshCw, Bug } from 'lucide-react';
 import StudentSidebar from '../../components/StudentSidebar';
 import { Course, coursesData } from './coursesData';
-import { getRecommendedCourses } from '../../../../backend/services/courseRecommendationService';
+import { getRecommendedCourses, fetchDebugScores } from '../../services/courseRecommendationService';
 import AIRecommendationBadge from '../../components/AIRecommendationBadge';
 
 const Courses: React.FC = () => {
@@ -14,6 +14,8 @@ const Courses: React.FC = () => {
   const [noScoreData, setNoScoreData] = useState(false);
   const [noScoreMessage, setNoScoreMessage] = useState<string | null>(null);
   const [currentUserEmail, setCurrentUserEmail] = useState<string>('');
+  const [showDebug, setShowDebug] = useState(false);
+  const [scoreData, setScoreData] = useState<any[]>([]);
   
   // Filter for enrolled courses (courses with progress)
   const enrolledCourses = Object.values(coursesData).filter(course => course.progress !== undefined);
@@ -52,6 +54,15 @@ const Courses: React.FC = () => {
       setCurrentUserEmail(email);
       console.log('Fetching recommendations for student:', email);
       
+      // Fetch score data for debugging
+      try {
+        const scores = await fetchDebugScores(email);
+        console.log("Debug scores fetched:", scores);
+        setScoreData(scores || []);
+      } catch (scoreErr) {
+        console.error("Error fetching debug scores:", scoreErr);
+      }
+      
       // Get quiz-based recommendations
       const recommended = await getRecommendedCourses(
         email, 
@@ -88,6 +99,35 @@ const Courses: React.FC = () => {
     fetchRecommendations();
   }, []);
 
+  // Add event listener to detect quiz submissions
+  useEffect(() => {
+    // Function to handle quiz submission events
+    const handleQuizSubmission = () => {
+      console.log("Quiz submission detected, refreshing recommendations...");
+      fetchRecommendations();
+    };
+
+    // Listen for custom event that will be triggered after quiz submission
+    window.addEventListener('quizSubmitted', handleQuizSubmission);
+
+    // Clean up listener
+    return () => {
+      window.removeEventListener('quizSubmitted', handleQuizSubmission);
+    };
+  }, []);
+
+  // Add periodic refresh for recommendations (every 30 seconds)
+  useEffect(() => {
+    const refreshInterval = setInterval(() => {
+      console.log("Periodic recommendation refresh");
+      fetchRecommendations();
+    }, 30000); // 30 seconds
+
+    return () => {
+      clearInterval(refreshInterval);
+    };
+  }, []);
+
   const handleNotebookClick = () => {
     // Handle notebook click
     console.log("Notebook clicked");
@@ -99,6 +139,10 @@ const Courses: React.FC = () => {
   
   const handleRefreshRecommendations = () => {
     fetchRecommendations();
+  };
+  
+  const toggleDebugMode = () => {
+    setShowDebug(!showDebug);
   };
 
   // Card component for both enrolled and recommended courses
@@ -159,6 +203,44 @@ const Courses: React.FC = () => {
     </div>
   );
 
+  // Debug component to display scores
+  const DebugScores = () => {
+    if (!showDebug || scoreData.length === 0) return null;
+    
+    return (
+      <div className="bg-yellow-50 border-2 border-yellow-300 rounded-md p-4 mb-6 overflow-auto">
+        <div className="flex justify-between items-center mb-2">
+          <h3 className="font-bold text-yellow-800">Debug: Database Scores</h3>
+          <span className="text-xs text-gray-500">Found {scoreData.length} score records</span>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-xs">
+            <thead>
+              <tr className="bg-yellow-100">
+                <th className="px-2 py-1 text-left">Course Name</th>
+                <th className="px-2 py-1 text-left">Score (%)</th>
+                <th className="px-2 py-1 text-left">Submission Date</th>
+                <th className="px-2 py-1 text-left">Subject</th>
+                <th className="px-2 py-1 text-left">Course ID</th>
+              </tr>
+            </thead>
+            <tbody>
+              {scoreData.map((score, index) => (
+                <tr key={index} className={index % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}>
+                  <td className="px-2 py-1">{score.courseName || 'N/A'}</td>
+                  <td className="px-2 py-1">{score.percentageScore || 0}%</td>
+                  <td className="px-2 py-1">{new Date(score.submissionDate || score.lastUpdated).toLocaleString()}</td>
+                  <td className="px-2 py-1">{score.subject || 'N/A'}</td>
+                  <td className="px-2 py-1">{score.courseId || 'N/A'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="flex">
       <StudentSidebar onNotebookClick={handleNotebookClick} />
@@ -188,6 +270,13 @@ const Courses: React.FC = () => {
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-text-primary">Recommended Courses</h2>
               <div className="flex items-center gap-4">
+                <button 
+                  onClick={toggleDebugMode}
+                  className="flex items-center gap-1 px-3 py-1 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 text-sm transition-colors"
+                >
+                  <Bug size={14} />
+                  <span>{showDebug ? 'Hide Debug' : 'Show Debug'}</span>
+                </button>
                 <span className="text-sm text-gray-500">
                   {noScoreData ? 'Based on your course activity' : 'Personalized recommendations based on your quiz scores'}
                 </span>
@@ -207,6 +296,9 @@ const Courses: React.FC = () => {
                 Getting recommendations for: {currentUserEmail}
               </div>
             )}
+            
+            {/* Debug scores display */}
+            <DebugScores />
             
             {loading ? (
               <div className="flex justify-center items-center py-10">
