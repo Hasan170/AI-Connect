@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getCourseScore, CourseScore, AssessmentScore } from '../../../backend/services/courseScoreService';
+import { getCourseScore, CourseScore, AssessmentScore } from '../services/courseScoreService';
 import { Course } from '../pages/student/coursesData';
 
 interface CourseScoreDisplayProps {

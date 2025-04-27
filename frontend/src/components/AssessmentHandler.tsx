@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { submitAssessmentScore } from '../../../backend/services/courseScoreService';
+import { submitAssessmentScore } from '../services/courseScoreService';
 
 interface AssessmentHandlerProps {
   studentEmail: string;
