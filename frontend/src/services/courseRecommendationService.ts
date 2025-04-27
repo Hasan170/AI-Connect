@@ -573,3 +573,4 @@ export const submitQuizScore = async (
     throw error;
   }
 }; 
+
