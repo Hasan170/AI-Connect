@@ -5,20 +5,32 @@ import {
   Users, 
   BookOpen, 
   LogOut,
-  Settings
+  MessageSquare
 } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 const AdminSidebar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  
   const menuItems = [
     { title: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/admin-dashboard' },
     { title: 'Students', icon: <GraduationCap size={20} />, path: '/admin/students' },
     { title: 'Subject Requests', icon: <BookOpen size={20} />, path: '/admin/subject-requests' },
     { title: 'Teachers', icon: <Users size={20} />, path: '/admin/teachers' },
+    { title: 'Feedback', icon: <MessageSquare size={20} />, path: '/admin/feedback' },
     { title: 'Resources', icon: <BookOpen size={20} />, path: '/admin/resources' },
-    { title: 'Settings', icon: <Settings size={20} />, path: '/admin/settings' },
   ];
+  
+  const handleLogout = () => {
+    // Clear localStorage
+    localStorage.removeItem('adminEmail');
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('currentUser');
+    
+    // Redirect to login page
+    navigate('/login');
+  };
 
   return (
     <div className="w-64 h-screen bg-white border-r fixed left-0 top-0 pt-24">
@@ -39,7 +51,7 @@ const AdminSidebar = () => {
         </div>
         <button 
           className="flex items-center gap-3 px-6 py-3 text-red-600 hover:bg-red-50 mb-4"
-          onClick={() => {/* Add logout logic */}}
+          onClick={handleLogout}
         >
           <LogOut size={20} />
           <span>Logout</span>

@@ -417,29 +417,6 @@ const StudentProfile = () => {
             ))}
           </div>
             )}
-
-          {/* Notifications Section */}
-          <div className="bg-white p-6 rounded-lg shadow-md mb-6 transform hover:scale-[1.01] transition-all duration-300">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold text-text-primary">Notifications</h2>
-              <Bell className="text-navbar" size={20} />
-            </div>
-            <div className="space-y-4">
-              {[
-                'Math assignment due tomorrow',
-                'Science class scheduled for Friday',
-                'English test next week',
-              ].map((notification, index) => (
-                <div
-                  key={index}
-                  className="flex items-center gap-4 p-4 bg-background rounded-lg transform hover:scale-[1.01] transition-all duration-300"
-                >
-                  <Calendar className="text-navbar" size={20} />
-                  <p className="text-text-primary">{notification}</p>
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
 
         {/* Edit Profile Modal */}

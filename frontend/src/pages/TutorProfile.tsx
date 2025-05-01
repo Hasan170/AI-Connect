@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Edit, Star, Users, DollarSign, Clock, Book, X } from 'lucide-react';
-import TutorSidebar from '../components/TutorSidebar';
+import { Calendar, Edit, Star, Users, DollarSign, Clock, Book, X, LogOut, MessageSquare, Send } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
 
@@ -11,10 +10,32 @@ interface ProfileData {
   rating: number;
 }
 
+interface StudentFeedback {
+  id: string;
+  studentName: string;
+  grade: string;
+  subject: string;
+  feedback?: string;
+}
+
+interface FeedbackFormData {
+  studentId: string;
+  subject: string;
+  feedback: string;
+  rating?: number;
+}
+
 const TutorProfile = () => {
   const navigate = useNavigate();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
   const [timeLeft, setTimeLeft] = useState(1800); 
+  const [selectedStudent, setSelectedStudent] = useState<StudentFeedback | null>(null);
+  const [feedbackText, setFeedbackText] = useState('');
+  const [studentFeedbacks, setStudentFeedbacks] = useState<StudentFeedback[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [teacherId, setTeacherId] = useState<string | null>(null);
+
   const [profileData, setProfileData] = useState<ProfileData>({
     name: '',
     expertise: [''],
@@ -43,6 +64,7 @@ const TutorProfile = () => {
   
         const response = await api.get(`/teacher/details/${email}`);
         const teacher = response.data;
+        setTeacherId(teacher._id);
         
         setProfileData({
           name: teacher.name,
@@ -60,7 +82,6 @@ const TutorProfile = () => {
       try {
         const email = localStorage.getItem('teacherEmail');
         const teacherRes = await api.get(`/teacher/details/${email}`);
-        // const classesRes = await api.get(`/classes/teacher/${teacherRes.data._id}`);
         const classesRes = await api.get(`/classes/teacher/${teacherRes.data._id}?status=scheduled`);
         
         setClasses(classesRes.data.map((cls: { _id: any; subject: any; studentId: { name: any; }; date: string | number | Date; time: any; }) => ({
@@ -75,8 +96,36 @@ const TutorProfile = () => {
       }
     };
 
+    const fetchStudentData = async () => {
+      try {
+        const email = localStorage.getItem('teacherEmail');
+        if (!email) return;
+        
+        const teacherRes = await api.get(`/teacher/details/${email}`);
+        const teacherId = teacherRes.data._id;
+        setTeacherId(teacherId);
+        
+        // Fetch students assigned to this teacher
+        const studentsRes = await api.get(`/classes/teacher/${teacherId}/students`);
+        
+        // Transform the data for our component
+        const studentData = studentsRes.data.map((student: any) => ({
+          id: student._id,
+          studentName: student.name,
+          grade: student.grade || 'N/A',
+          subject: student.subjects.join(', '),
+          feedback: student.feedback || undefined
+        }));
+        
+        setStudentFeedbacks(studentData);
+      } catch (error) {
+        console.error('Error fetching student data:', error);
+      }
+    };
+
     fetchTeacherData();
     fetchClasses();
+    fetchStudentData();
   }, [navigate]);
 
   const formatTime = (seconds: number) => {
@@ -94,17 +143,91 @@ const TutorProfile = () => {
     navigate(`/class/${classId}`);
   };
 
+  const handleFeedbackOpen = (student: StudentFeedback) => {
+    setSelectedStudent(student);
+    setIsFeedbackModalOpen(true);
+  };
+
+  const handleFeedbackSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedStudent || !teacherId || !feedbackText.trim()) {
+      alert("Please enter feedback text");
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      
+      // The subject is coming as a comma-separated string - extract first subject
+      const firstSubject = selectedStudent.subject.split(', ')[0];
+      
+      console.log('Submitting tutor feedback:', {
+        studentId: selectedStudent.id,
+        teacherId,
+        subject: firstSubject,
+        feedback: feedbackText,
+        feedbackType: 'tutorToStudent'
+      });
+      
+      await api.post('/feedback/submit', {
+        studentId: selectedStudent.id,
+        teacherId,
+        subject: firstSubject, // Use first subject if multiple
+        feedback: feedbackText,
+        feedbackType: 'tutorToStudent'
+      });
+      
+      // Update local state
+      setStudentFeedbacks(prev => 
+        prev.map(student => 
+          student.id === selectedStudent.id 
+            ? { ...student, feedback: feedbackText }
+            : student
+        )
+      );
+      
+      setIsFeedbackModalOpen(false);
+      setFeedbackText('');
+      alert('Feedback submitted successfully!');
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      alert('Failed to submit feedback. Please check console for details.');
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const handleLogout = () => {
+    // Clear localStorage
+    localStorage.removeItem('teacherEmail');
+    localStorage.removeItem('teacherToken');
+    localStorage.removeItem('currentUser');
+    
+    // Redirect to login page
+    navigate('/login');
+  };
+
   return (
-    <div className="flex">
-      <TutorSidebar />
-      <div className="flex-1 pt-24 px-6 bg-background min-h-screen ml-64">
+    <div className="min-h-screen bg-background pt-16">
+      <div className="py-6 px-8 mt-8">
         <div className="max-w-7xl mx-auto">
-          {/* Welcome Header */}
-          <div className="bg-white p-6 rounded-lg shadow-md mb-6 transform hover:scale-[1.01] transition-all duration-300">
-            <h1 className="text-3xl font-bold text-text-primary">Welcome back, {profileData.name}!</h1>
-            <p className="text-text-secondary mt-2">
-              Your next class starts in <span className="font-bold text-navbar">{formatTime(timeLeft)}</span>
-            </p>
+          {/* Welcome Header with Logout Button */}
+          <div className="bg-white p-6 rounded-lg shadow-md mb-6 transform hover:scale-[1.01] transition-all duration-300 z-10 relative">
+            <div className="flex justify-between items-center">
+              <div>
+                <h1 className="text-3xl font-bold text-text-primary">Welcome back, {profileData.name}!</h1>
+                <p className="text-text-secondary mt-2">
+                  Your next class starts in <span className="font-bold text-navbar">{formatTime(timeLeft)}</span>
+                </p>
+              </div>
+              <button 
+                onClick={handleLogout}
+                className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+              >
+                <LogOut size={18} />
+                Logout
+              </button>
+            </div>
           </div>
 
           {/* Profile and Earnings Section */}
@@ -209,34 +332,50 @@ const TutorProfile = () => {
             </div>
           </div>
 
-          {/* Student Insights Section */}
+          {/* Feedbacks Section (Previously Student Insights) */}
           <div className="bg-white p-6 rounded-lg shadow-md mb-6 transform hover:scale-[1.01] transition-all duration-300">
-            <h2 className="text-xl font-semibold text-text-primary mb-6">Student Insights</h2>
+            <h2 className="text-xl font-semibold text-text-primary mb-6">Student Feedbacks</h2>
             <div className="grid md:grid-cols-3 gap-4">
-              {[
-                { name: 'John Doe', grade: '10th', progress: 'Excellent' },
-                { name: 'Jane Smith', grade: '11th', progress: 'Good' },
-                { name: 'Mike Johnson', grade: '12th', progress: 'Needs Improvement' },
-              ].map((student, index) => (
-                <div key={index} className="p-4 bg-background rounded-lg transform hover:scale-[1.02] transition-all duration-300">
+              {studentFeedbacks.length > 0 ? studentFeedbacks.map((student, index) => (
+                <div key={student.id} className="p-4 bg-background rounded-lg transform hover:scale-[1.02] transition-all duration-300">
                   <div className="flex justify-between items-start mb-3">
                     <div>
-                      <p className="font-medium">{student.name}</p>
+                      <p className="font-medium">{student.studentName}</p>
                       <p className="text-sm text-gray-500">Grade: {student.grade}</p>
+                      <p className="text-sm text-gray-500">Subject: {student.subject}</p>
                     </div>
-                    <Users className="text-navbar" size={20} />
+                    <MessageSquare className="text-navbar" size={20} />
                   </div>
-                  <p className="text-sm text-gray-600 mb-3">Progress: {student.progress}</p>
+                  
+                  {student.feedback ? (
+                    <div className="mb-3">
+                      <p className="text-xs text-gray-500 mb-1">Your feedback:</p>
+                      <p className="text-sm text-gray-600 bg-gray-50 p-2 rounded-md border border-gray-100">
+                        {student.feedback}
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-600 mb-3">No feedback sent yet</p>
+                  )}
+                  
                   <div className="flex gap-2">
                     <button className="flex-1 bg-navbar text-white py-2 rounded-lg hover:bg-button-secondary transition-colors transform hover:scale-[1.05]">
-                      View Report
+                      View Progress
                     </button>
-                    <button className="flex-1 bg-card text-text-primary py-2 rounded-lg hover:bg-gray-300 transition-colors transform hover:scale-[1.05]">
-                      Send Feedback
+                    <button 
+                      className="flex-1 bg-card text-text-primary py-2 rounded-lg hover:bg-gray-300 transition-colors transform hover:scale-[1.05]"
+                      onClick={() => handleFeedbackOpen(student)}
+                    >
+                      {student.feedback ? 'Edit Feedback' : 'Send Feedback'}
                     </button>
                   </div>
                 </div>
-              ))}
+              )) : (
+                <div className="md:col-span-3 p-8 text-center">
+                  <MessageSquare className="mx-auto text-gray-300 mb-2" size={40} />
+                  <p className="text-gray-500">No students assigned yet</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -291,6 +430,68 @@ const TutorProfile = () => {
                 className="w-full bg-navbar text-white py-2 rounded-lg hover:bg-button-secondary transition-colors"
               >
                 Save
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Send Feedback Modal */}
+      {isFeedbackModalOpen && selectedStudent && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-96 transform scale-100 transition-transform duration-300">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-semibold">Send Feedback</h3>
+              <button 
+                onClick={() => {
+                  setIsFeedbackModalOpen(false);
+                  setFeedbackText('');
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <form onSubmit={handleFeedbackSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Student</label>
+                <p className="text-gray-700">{selectedStudent.studentName}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+                <p className="text-gray-700">{selectedStudent.subject}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Your Feedback</label>
+                <textarea
+                  value={feedbackText}
+                  onChange={(e) => setFeedbackText(e.target.value)}
+                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-navbar focus:outline-none"
+                  rows={4}
+                  placeholder="Provide your feedback about this student's performance..."
+                  required
+                ></textarea>
+              </div>
+              <button
+                type="submit"
+                disabled={loading || !feedbackText.trim()}
+                className={`w-full flex items-center justify-center gap-2 py-2 rounded-lg ${
+                  loading || !feedbackText.trim() 
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                    : 'bg-navbar text-white hover:bg-button-secondary'
+                } transition-colors`}
+              >
+                {loading ? (
+                  <>
+                    <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                    <span>Submitting...</span>
+                  </>
+                ) : (
+                  <>
+                    <Send size={16} />
+                    <span>Send Feedback</span>
+                  </>
+                )}
               </button>
             </form>
           </div>
