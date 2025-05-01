@@ -6,10 +6,15 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
 
-
-  const isProfilePage = ['/student-profile', '/tutor-profile', '/admin-dashboard',  '/admin/students', '/admin/teachers', '/admin/resources', '/admin/settings'
-  ].includes(location.pathname) || ['/student/classes', '/student/schedule', '/student/assignments', '/student/teachers', '/student/resources', '/student/fee-details', '/student/feedback'
-  ].includes(location.pathname);
+  // Update the isProfilePage check to include student profile paths
+  const isProfilePage = ['/student-profile', '/tutor-profile', '/admin-dashboard', '/admin/students', '/admin/teachers', 
+    '/admin/resources', '/admin/settings', '/student/classes', '/student/schedule', '/student/assignments', 
+    '/student/teachers', '/student/resources', '/student/fee-details', '/student/feedback', '/student/MyCourses',
+    '/student/Courses'
+  ].includes(location.pathname) || 
+  location.pathname.startsWith('/student/') || 
+  location.pathname.startsWith('/admin/') ||
+  location.pathname.startsWith('/tutor/');
 
   const navItems = [
     { label: 'About Us', href: '/about' },
@@ -21,7 +26,7 @@ const Navbar = () => {
   return (
     <nav className="bg-navbar py-4 px-6 fixed w-full top-0 z-50 shadow-md">
       <div className="max-w-7xl mx-auto flex justify-between items-center">
-      <Link to="/" className="flex items-center space-x-2">
+        <Link to="/" className="flex items-center space-x-2">
           <img 
             src="/aiclogo.png" 
             alt="AI Connect Logo" 
@@ -30,7 +35,7 @@ const Navbar = () => {
           <span className="text-2xl font-sans font-bold text-white">AI Connect</span>
         </Link>
         
-        {/* Only show these items if not on profile pages */}
+        {/* Only show navigation items if not on profile pages */}
         {!isProfilePage && (
           <>
             <div className="hidden md:flex items-center space-x-8">
@@ -59,6 +64,8 @@ const Navbar = () => {
           </>
         )}
       </div>
+      
+      {/* Mobile menu */}
       {isOpen && !isProfilePage && (
         <div className="md:hidden absolute top-16 left-0 right-0 bg-navbar p-4">
           {navItems.map((item) => (

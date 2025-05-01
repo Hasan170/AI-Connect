@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Filter, Star, Phone, Mail, BookOpen } from 'lucide-react';
 import StudentSidebar from '../../components/StudentSidebar';
+import api from '../../api';
 
 interface Teacher {
   id: string;
   name: string;
   subjects: string[];
-  experience: string;
+  expertise: string;  // For mapping from the backend
+  experience: string | number;
   rating: number;
   totalReviews: number;
   email: string;
@@ -18,45 +20,84 @@ interface Teacher {
 const Teachers = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterSubject, setFilterSubject] = useState('all');
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [studentSubjects, setStudentSubjects] = useState<string[]>([]);
 
-  const teachers: Teacher[] = [
-    {
-      id: '1',
-      name: 'Dr. Sarah Smith',
-      subjects: ['Mathematics', 'Physics'],
-      experience: '8 years',
-      rating: 4.8,
-      totalReviews: 156,
-      email: 'sarah.smith@aiconnect.com',
-      phone: '+1 234-567-8901',
-      availability: 'Mon-Fri, 9 AM - 5 PM',
-      imageUrl: '/dp.png'
-    },
-    {
-      id: '2',
-      name: 'Prof. John Davis',
-      subjects: ['Chemistry', 'Biology'],
-      experience: '12 years',
-      rating: 4.9,
-      totalReviews: 203,
-      email: 'john.davis@aiconnect.com',
-      phone: '+1 234-567-8902',
-      availability: 'Mon-Sat, 10 AM - 6 PM',
-      imageUrl: '/dp.png'
-    },
-    {
-      id: '3',
-      name: 'Ms. Emily Johnson',
-      subjects: ['English', 'Literature'],
-      experience: '6 years',
-      rating: 4.7,
-      totalReviews: 128,
-      email: 'emily.johnson@aiconnect.com',
-      phone: '+1 234-567-8903',
-      availability: 'Tue-Sat, 11 AM - 7 PM',
-      imageUrl: '/dp.png'
-    }
-  ];
+  useEffect(() => {
+    const fetchTeachers = async () => {
+      try {
+        setLoading(true);
+        
+        // Get student email from localStorage
+        const email = localStorage.getItem('studentEmail');
+        if (!email) {
+          throw new Error('User not logged in');
+        }
+        
+        // First get student details to get subjects and their assigned teachers
+        const studentRes = await api.get(`/student/details/${email}`);
+        const student = studentRes.data;
+        
+        // Extract subject names for filter
+        const subjects = student.subjects.map((s: any) => s.subject);
+        setStudentSubjects(subjects);
+        
+        // Get teacher IDs
+        const teacherIds = student.subjects.map((s: any) => s.teacherId);
+        
+        // Get teacher details
+        let teachersData: Teacher[] = [];
+        
+        for (const subject of student.subjects) {
+          if (subject.teacherId) {
+            try {
+              // Fetch teacher details for each assigned teacher
+              const teacherRes = await api.get(`/teacher/details/byid/${subject.teacherId}`);
+              const teacherData = teacherRes.data;
+              
+              // Check if teacher already exists in array
+              const existingTeacher = teachersData.find(t => t.id === subject.teacherId);
+              
+              if (existingTeacher) {
+                // Add subject to existing teacher if not already included
+                if (!existingTeacher.subjects.includes(subject.subject)) {
+                  existingTeacher.subjects.push(subject.subject);
+                }
+              } else {
+                // Add new teacher
+                teachersData.push({
+                  id: teacherData._id,
+                  name: teacherData.name,
+                  subjects: [subject.subject],
+                  expertise: teacherData.expertise,
+                  experience: `${teacherData.experience} years`,
+                  rating: 4.8, // Default or you could add this to your schema
+                  totalReviews: 150, // Default or you could add this to your schema
+                  email: teacherData.email,
+                  phone: '+1 234-567-8901', // Default or you could add this to your schema
+                  availability: 'Mon-Fri, 9 AM - 5 PM', // Default or you could add this to your schema
+                  imageUrl: '/dp.png' // Default image
+                });
+              }
+            } catch (err) {
+              console.error(`Error fetching teacher ${subject.teacherId}:`, err);
+            }
+          }
+        }
+        
+        setTeachers(teachersData);
+      } catch (err) {
+        console.error('Error fetching teachers:', err);
+        setError('Failed to load teachers');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchTeachers();
+  }, []);
 
   const filteredTeachers = teachers.filter(teacher => {
     const matchesSearch = 
@@ -115,64 +156,79 @@ const Teachers = () => {
             </div>
           </div>
 
-          {/* Teachers Grid */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredTeachers.map((teacher) => (
-              <div key={teacher.id} className="bg-white p-6 rounded-lg shadow-md transform hover:scale-[1.02] transition-all duration-300">
-                <div className="flex items-start gap-4">
-                  <div className="w-20 h-20 rounded-full bg-gray-200 overflow-hidden">
-                    <img 
-                      src={teacher.imageUrl} 
-                      alt={teacher.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-text-primary">{teacher.name}</h3>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {teacher.subjects.map(subject => (
-                        <span 
-                          key={subject}
-                          className="px-3 py-1 bg-gray-100 rounded-full text-sm text-gray-600"
-                        >
-                          {subject}
-                        </span>
-                      ))}
+          {/* Loading and Error States */}
+          {loading ? (
+            <div className="flex justify-center items-center py-20">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-navbar"></div>
+            </div>
+          ) : error ? (
+            <div className="bg-red-50 text-red-500 p-4 rounded-lg text-center">
+              {error}
+            </div>
+          ) : filteredTeachers.length === 0 ? (
+            <div className="bg-white p-6 rounded-lg shadow-md text-center">
+              <p className="text-gray-500">No teachers found for your subjects.</p>
+            </div>
+          ) : (
+            /* Teachers Grid */
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredTeachers.map((teacher) => (
+                <div key={teacher.id} className="bg-white p-6 rounded-lg shadow-md transform hover:scale-[1.02] transition-all duration-300">
+                  <div className="flex items-start gap-4">
+                    <div className="w-20 h-20 rounded-full bg-gray-200 overflow-hidden">
+                      <img 
+                        src={teacher.imageUrl} 
+                        alt={teacher.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-text-primary">{teacher.name}</h3>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {teacher.subjects.map(subject => (
+                          <span 
+                            key={subject}
+                            className="px-3 py-1 bg-gray-100 rounded-full text-sm text-gray-600"
+                          >
+                            {subject}
+                          </span>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="mt-4 space-y-2">
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <BookOpen size={16} />
-                    <span className="text-sm">Experience: {teacher.experience}</span>
+                  <div className="mt-4 space-y-2">
+                    <div className="flex items-center gap-2 text-gray-600">
+                      <BookOpen size={16} />
+                      <span className="text-sm">Experience: {teacher.experience}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Star size={16} className="text-yellow-400" />
+                      <span className="text-sm text-gray-600">
+                        {teacher.rating} ({teacher.totalReviews} reviews)
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Star size={16} className="text-yellow-400" />
-                    <span className="text-sm text-gray-600">
-                      {teacher.rating} ({teacher.totalReviews} reviews)
-                    </span>
-                  </div>
-                </div>
 
-                <div className="mt-4 grid grid-cols-2 gap-3">
-                  <button 
-                    className="flex items-center justify-center gap-2 px-4 py-2 bg-navbar text-white rounded-lg hover:bg-opacity-90 transition-colors"
-                    onClick={() => window.location.href = `mailto:${teacher.email}`}
-                  >
-                    <Mail size={16} />
-                    Contact
-                  </button>
-                  <button 
-                    className="flex items-center justify-center gap-2 px-4 py-2 border border-navbar text-navbar rounded-lg hover:bg-navbar hover:text-white transition-all duration-300"
-                  >
-                    <BookOpen size={16} />
-                    Schedule Class
-                  </button>
+                  <div className="mt-4 grid grid-cols-2 gap-3">
+                    <button 
+                      className="flex items-center justify-center gap-2 px-4 py-2 bg-navbar text-white rounded-lg hover:bg-opacity-90 transition-colors"
+                      onClick={() => window.location.href = `mailto:${teacher.email}`}
+                    >
+                      <Mail size={16} />
+                      Contact
+                    </button>
+                    <button 
+                      className="flex items-center justify-center gap-2 px-4 py-2 border border-navbar text-navbar rounded-lg hover:bg-navbar hover:text-white transition-all duration-300"
+                    >
+                      <BookOpen size={16} />
+                      Schedule Class
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

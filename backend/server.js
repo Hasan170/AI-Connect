@@ -8,6 +8,7 @@ const requestRoutes = require('./routes/requestRoutes');
 const classRoutes = require('./routes/classRoutes');
 const courseScoreRoutes = require('./routes/courseScoreRoutes');
 const resourceRoutes = require('./routes/resourceRoutes');
+const feedbackRoutes = require('./routes/feedbackRoutes'); // Add this line
 
 const app = express();
 
@@ -25,6 +26,7 @@ app.use('/api/requests', requestRoutes);
 app.use('/api/classes', classRoutes);
 app.use('/api/courses/score', courseScoreRoutes);
 app.use('/api/resources', resourceRoutes);
+app.use('/api/feedback', feedbackRoutes); // Add this line
 
 // Serve uploaded files statically
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

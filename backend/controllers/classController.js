@@ -191,3 +191,51 @@ exports.getClassDetails = async (req, res) => {
     });
   }
 };
+
+// ===== added by isra =====
+// Get all students assigned to a teacher (directly from subject assignments, not class schedules)
+exports.getTeacherStudents = async (req, res) => {
+  try {
+    const { teacherId } = req.params;
+    
+    if (!mongoose.Types.ObjectId.isValid(teacherId)) {
+      return res.status(400).json({ 
+        success: false,
+        message: 'Invalid teacher ID format' 
+      });
+    }
+
+    // Find all students where this teacher is assigned to any subject
+    const students = await StudentDetails.find({
+      'subjects.teacherId': teacherId
+    }).select('_id name grade subjects');
+    
+    if (!students || students.length === 0) {
+      return res.json([]);
+    }
+
+    // Process students to include only relevant details
+    const formattedStudents = students.map(student => {
+      // Filter subjects to only those taught by this teacher
+      const teacherSubjects = student.subjects
+        .filter(subject => subject.teacherId && subject.teacherId.toString() === teacherId)
+        .map(subject => subject.subject);
+      
+      return {
+        _id: student._id,
+        name: student.name,
+        grade: student.grade || 'N/A',
+        subjects: teacherSubjects
+      };
+    });
+
+    res.status(200).json(formattedStudents);
+  } catch (error) {
+    console.error('[GET TEACHER STUDENTS ERROR]', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch students assigned to teacher',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};

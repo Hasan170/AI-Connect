@@ -84,4 +84,30 @@ const createTeacher = async (req, res) => {
   }
 };
 
-module.exports = { loginTeacher, getTeacherDetails, createTeacher, getAllTeachers };
+
+
+// added by isra
+// Fetch teacher details by ID
+const getTeacherById = async (req, res) => {
+  const { id } = req.params; // Get the ID from the URL parameter
+  
+  if (!id) {
+    return res.status(400).json({ error: 'Teacher ID is required' });
+  }
+  
+  try {
+    const teacher = await TeacherDetails.findById(id); // Find the teacher by ID
+    
+    if (teacher) {
+      res.status(200).json(teacher); // Return the teacher details
+    } else {
+      res.status(404).json({ error: 'Teacher not found' });
+    }
+  } catch (err) {
+    console.error('Error fetching teacher:', err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+
+module.exports = { loginTeacher, getTeacherDetails, createTeacher, getAllTeachers, getTeacherById };

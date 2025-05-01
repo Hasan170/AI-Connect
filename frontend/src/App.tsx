@@ -24,6 +24,7 @@ import Students from './pages/admin/Students';
 import Teachers from './pages/admin/Teachers';
 import Resources from './pages/admin/Resources';
 import SubjectRequests from './pages/admin/SubjectRequests';
+import AdminFeedback from './pages/admin/Feedback';
 
 // Student pages
 import MyClasses from './pages/student/MyClasses';
@@ -34,7 +35,6 @@ import ResourcesPage from './pages/student/Resources';
 import FeeDetails from './pages/student/FeeDetails';
 import Feedback from './pages/student/Feedback';
 import MyCourses from './pages/student/MyCourses';
-import MyProgress from './pages/student/MyProgress';
 import Courses from './pages/student/Courses';
 
 function App() {
@@ -42,10 +42,10 @@ function App() {
   const showFooter = ![
     '/admin-dashboard', '/student-profile', '/tutor-profile', 
     '/admin/students', '/admin/teachers', '/admin/resources', 
-    '/admin/settings', '/student/classes', '/student/schedule', 
+    '/student/classes', '/student/schedule', 
     '/student/assignments', '/student/teachers', '/student/resources', 
     '/student/fee-details', '/student/feedback', '/student/MyCourses', 
-    '/class/:classId', '/student/progress', '/student/Courses', 
+    '/class/:classId', '/student/Courses', '/admin/feedback',
     '/admin/subject-requests',
   ].some(path => location.pathname.startsWith(path));
 
@@ -72,6 +72,7 @@ function App() {
           <Route path="/admin/teachers" element={<Teachers />} />
           <Route path="/admin/resources" element={<Resources />} />
           <Route path="/admin/subject-requests" element={<SubjectRequests />} />
+          <Route path="/admin/feedback" element={<AdminFeedback />} />
 
           {/* Student routes */}
           <Route path="/student/classes" element={<MyClasses />} />
@@ -81,7 +82,6 @@ function App() {
           <Route path="/student/resources" element={<ResourcesPage />} />
           <Route path="/student/fee-details" element={<FeeDetails />} />
           <Route path="/student/feedback" element={<Feedback />} />
-          <Route path="/student/progress" element={<MyProgress />} />
           
           {/* Course routes - updated section */}
           <Route path="/student/Courses" element={<Courses />} />

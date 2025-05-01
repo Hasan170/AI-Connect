@@ -1,14 +1,20 @@
-import React, { useState } from 'react';
-import { Star, MessageSquare, Search, Filter, ThumbsUp, Send } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Star, MessageSquare, Search, Filter, ThumbsUp, Send, PlusCircle, Clock } from 'lucide-react';
 import StudentSidebar from '../../components/StudentSidebar';
+import api from '../../api';
 
 interface FeedbackItem {
   id: string;
   teacherName: string;
-  subject: string;
-  date: string;
-  rating?: number;
-  feedback?: string;
+  expertise?: string;
+  subjects: string[];
+  feedbacks?: {
+    id: string;
+    subject: string;
+    rating: number;
+    feedback: string;
+    createdAt: string;
+  }[];
   status: 'pending' | 'submitted';
 }
 
@@ -18,50 +24,111 @@ const Feedback = () => {
   const [activeFeedback, setActiveFeedback] = useState<string | null>(null);
   const [feedbackText, setFeedbackText] = useState('');
   const [selectedRating, setSelectedRating] = useState(0);
+  const [selectedSubject, setSelectedSubject] = useState('');
+  const [feedbackItems, setFeedbackItems] = useState<FeedbackItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [studentId, setStudentId] = useState<string | null>(null);
+  const [isAddingNewFeedback, setIsAddingNewFeedback] = useState(false);
 
-  const feedbackItems: FeedbackItem[] = [
-    {
-      id: '1',
-      teacherName: 'Dr. Smith',
-      subject: 'Mathematics',
-      date: '2025-02-01',
-      status: 'pending'
-    },
-    {
-      id: '2',
-      teacherName: 'Prof. Johnson',
-      subject: 'Physics',
-      date: '2025-02-02',
-      rating: 5,
-      feedback: 'Excellent teaching methods and very patient in explaining concepts.',
-      status: 'submitted'
-    },
-    {
-      id: '3',
-      teacherName: 'Dr. Williams',
-      subject: 'Chemistry',
-      date: '2025-02-03',
-      status: 'pending'
-    }
-  ];
+  useEffect(() => {
+    const fetchStudentData = async () => {
+      try {
+        setLoading(true);
+        
+        // Get student email from localStorage
+        const email = localStorage.getItem('studentEmail');
+        if (!email) {
+          throw new Error('User not logged in');
+        }
+        
+        // Get student ID
+        const studentRes = await api.get(`/student/details/${email}`);
+        const studentId = studentRes.data._id;
+        setStudentId(studentId);
+        
+        // Get teachers for feedback with their feedback status
+        const teachersRes = await api.get(`/feedback/student/${studentId}/teachers-with-feedbacks`);
+        setFeedbackItems(teachersRes.data);
+        
+      } catch (err) {
+        console.error('Error fetching feedback:', err);
+        setError('Failed to load feedback data');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchStudentData();
+  }, []);
 
   const filteredFeedback = feedbackItems.filter(item => {
     const matchesSearch = 
       item.teacherName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.subject.toLowerCase().includes(searchTerm.toLowerCase());
+      (item.subjects && item.subjects.some(subject => subject.toLowerCase().includes(searchTerm.toLowerCase())));
     const matchesStatus = filterStatus === 'all' || item.status === filterStatus;
     return matchesSearch && matchesStatus;
   });
 
-  const handleSubmitFeedback = (id: string) => {
-    console.log('Submitting feedback:', {
-      id,
-      rating: selectedRating,
-      feedback: feedbackText
-    });
-    setActiveFeedback(null);
-    setFeedbackText('');
-    setSelectedRating(0);
+  const handleSubmitFeedback = async (teacherId: string) => {
+    if (!studentId) {
+      alert('User session lost. Please login again.');
+      return;
+    }
+    
+    if (!selectedSubject) {
+      alert('Please select a subject');
+      return;
+    }
+    
+    try {
+      const response = await api.post('/feedback/submit', {
+        studentId,
+        teacherId,
+        subject: selectedSubject,
+        rating: selectedRating,
+        feedback: feedbackText
+      });
+      
+      const newFeedback = response.data.feedback;
+      
+      // Update the local state to reflect the submitted feedback
+      setFeedbackItems(prevItems => prevItems.map(item => {
+        if (item.id === teacherId) {
+          // Create feedbacks array if it doesn't exist
+          const currentFeedbacks = item.feedbacks || [];
+          
+          return {
+            ...item,
+            feedbacks: [
+              ...currentFeedbacks,
+              {
+                id: newFeedback._id,
+                subject: selectedSubject,
+                rating: selectedRating,
+                feedback: feedbackText,
+                createdAt: newFeedback.createdAt
+              }
+            ],
+            // Only change status to submitted if this is the first feedback
+            status: 'submitted'
+          };
+        }
+        return item;
+      }));
+      
+      // Reset form state
+      setActiveFeedback(null);
+      setIsAddingNewFeedback(false);
+      setFeedbackText('');
+      setSelectedRating(0);
+      setSelectedSubject('');
+      
+      alert('Feedback submitted successfully!');
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      alert('Failed to submit feedback. Please try again.');
+    }
   };
 
   return (
@@ -71,8 +138,8 @@ const Feedback = () => {
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-            <h1 className="text-3xl font-bold text-text-primary">Feedback</h1>
-            <p className="text-text-secondary mt-2">Share your experience and help us improve</p>
+            <h1 className="text-3xl font-bold text-text-primary">Teacher Feedback</h1>
+            <p className="text-text-secondary mt-2">Share your experience with your teachers</p>
           </div>
 
           {/* Filters */}
@@ -98,101 +165,184 @@ const Feedback = () => {
                   className="border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-navbar"
                 >
                   <option value="all">All Status</option>
-                  <option value="pending">Pending</option>
-                  <option value="submitted">Submitted</option>
+                  <option value="pending">Not Rated Yet</option>
+                  <option value="submitted">Already Rated</option>
                 </select>
               </div>
             </div>
           </div>
 
+          {/* Loading State */}
+          {loading && (
+            <div className="flex justify-center items-center py-20">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-navbar"></div>
+            </div>
+          )}
+
+          {/* Error State */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 p-4 rounded-md mb-6">
+              <p className="text-red-500">{error}</p>
+            </div>
+          )}
+
           {/* Feedback List */}
-          <div className="space-y-6">
-            {filteredFeedback.map((item) => (
-              <div key={item.id} className="bg-white p-6 rounded-lg shadow-md">
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h3 className="text-lg font-semibold text-text-primary">{item.subject}</h3>
-                    <p className="text-gray-500">{item.teacherName}</p>
-                    <p className="text-sm text-gray-500">Class Date: {new Date(item.date).toLocaleDateString()}</p>
+          {!loading && !error && (
+            <div className="space-y-6">
+              {filteredFeedback.map((item) => (
+                <div key={item.id} className="bg-white p-6 rounded-lg shadow-md">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h3 className="text-lg font-semibold text-text-primary">{item.teacherName}</h3>
+                      <p className="text-gray-500">{item.expertise}</p>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {item.subjects?.map(subject => (
+                          <span 
+                            key={subject}
+                            className="px-3 py-1 bg-gray-100 rounded-full text-sm text-gray-600"
+                          >
+                            {subject}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    <span className={`px-3 py-1 rounded-full text-xs ${
+                      item.status === 'submitted' 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-yellow-100 text-yellow-800'
+                    }`}>
+                      {item.status === 'submitted' ? 
+                        `${item.feedbacks?.length || 1} Feedback${(item.feedbacks?.length || 1) > 1 ? 's' : ''}` : 
+                        'Not Rated'}
+                    </span>
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-xs ${
-                    item.status === 'submitted' 
-                      ? 'bg-green-100 text-green-800' 
-                      : 'bg-yellow-100 text-yellow-800'
-                  }`}>
-                    {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
-                  </span>
-                </div>
 
-                {item.status === 'submitted' ? (
-                  <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                    <div className="flex items-center gap-2 mb-2">
-                      {[...Array(5)].map((_, index) => (
-                        <Star
-                          key={index}
-                          size={20}
-                          className={index < (item.rating || 0) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}
-                        />
+                  {/* Show previous feedbacks */}
+                  {item.feedbacks && item.feedbacks.length > 0 && (
+                    <div className="mt-4 space-y-4">
+                      {item.feedbacks.map((feedback) => (
+                        <div key={feedback.id} className="p-4 bg-gray-50 rounded-lg border border-gray-100">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              {[...Array(5)].map((_, index) => (
+                                <Star
+                                  key={index}
+                                  size={18}
+                                  className={index < feedback.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}
+                                />
+                              ))}
+                              <span className="text-sm font-medium text-gray-700 ml-2">{feedback.subject}</span>
+                            </div>
+                            <div className="flex items-center text-xs text-gray-500">
+                              <Clock size={14} className="mr-1" />
+                              {new Date(feedback.createdAt).toLocaleDateString()}
+                            </div>
+                          </div>
+                          <p className="text-gray-600 text-sm">{feedback.feedback}</p>
+                        </div>
                       ))}
                     </div>
-                    <p className="text-gray-600">{item.feedback}</p>
-                  </div>
-                ) : activeFeedback === item.id ? (
-                  <div className="mt-4 space-y-4">
-                    <div className="flex items-center gap-2">
-                      {[...Array(5)].map((_, index) => (
-                        <button
-                          key={index}
-                          onClick={() => setSelectedRating(index + 1)}
-                          className="focus:outline-none"
+                  )}
+
+                  {/* Add new feedback form */}
+                  {activeFeedback === item.id && isAddingNewFeedback ? (
+                    <div className="mt-4 space-y-4 p-4 bg-blue-50 rounded-lg">
+                      <h4 className="font-medium text-navbar">Add New Feedback</h4>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+                        <select
+                          value={selectedSubject}
+                          onChange={(e) => setSelectedSubject(e.target.value)}
+                          className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-navbar"
+                          required
                         >
-                          <Star
-                            size={24}
-                            className={index < selectedRating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}
-                          />
+                          <option value="">Select subject</option>
+                          {item.subjects?.map(subject => (
+                            <option key={subject} value={subject}>{subject}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Rating</label>
+                        <div className="flex items-center gap-2">
+                          {[...Array(5)].map((_, index) => (
+                            <button
+                              key={index}
+                              onClick={() => setSelectedRating(index + 1)}
+                              className="focus:outline-none"
+                              type="button"
+                            >
+                              <Star
+                                size={24}
+                                className={index < selectedRating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}
+                              />
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Your Feedback</label>
+                        <textarea
+                          value={feedbackText}
+                          onChange={(e) => setFeedbackText(e.target.value)}
+                          placeholder="Share your experience with this teacher..."
+                          className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-navbar"
+                          rows={4}
+                        />
+                      </div>
+                      <div className="flex justify-end gap-2">
+                        <button
+                          onClick={() => {
+                            setActiveFeedback(null);
+                            setIsAddingNewFeedback(false);
+                            setSelectedSubject('');
+                            setSelectedRating(0);
+                            setFeedbackText('');
+                          }}
+                          className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                          type="button"
+                        >
+                          Cancel
                         </button>
-                      ))}
+                        <button
+                          onClick={() => handleSubmitFeedback(item.id)}
+                          disabled={!selectedRating || !feedbackText.trim() || !selectedSubject}
+                          className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                            !selectedRating || !feedbackText.trim() || !selectedSubject
+                              ? 'bg-gray-300 text-gray-600 cursor-not-allowed' 
+                              : 'bg-navbar text-white hover:bg-opacity-90'
+                          }`}
+                          type="button"
+                        >
+                          <Send size={16} />
+                          Submit Feedback
+                        </button>
+                      </div>
                     </div>
-                    <textarea
-                      value={feedbackText}
-                      onChange={(e) => setFeedbackText(e.target.value)}
-                      placeholder="Share your experience..."
-                      className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-navbar"
-                      rows={4}
-                    />
-                    <div className="flex justify-end gap-2">
+                  ) : (
+                    <div className="mt-4 flex gap-4">
                       <button
-                        onClick={() => setActiveFeedback(null)}
-                        className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                        onClick={() => {
+                          setActiveFeedback(item.id);
+                          setIsAddingNewFeedback(true);
+                        }}
+                        className="flex items-center gap-2 text-navbar hover:text-opacity-80 transition-colors"
+                        type="button"
                       >
-                        Cancel
-                      </button>
-                      <button
-                        onClick={() => handleSubmitFeedback(item.id)}
-                        className="flex items-center gap-2 px-4 py-2 bg-navbar text-white rounded-lg hover:bg-opacity-90 transition-colors"
-                      >
-                        <Send size={16} />
-                        Submit Feedback
+                        <PlusCircle size={20} />
+                        <span>Add Feedback</span>
                       </button>
                     </div>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => setActiveFeedback(item.id)}
-                    className="mt-4 flex items-center gap-2 text-navbar hover:text-opacity-80 transition-colors"
-                  >
-                    <MessageSquare size={20} />
-                    <span>Give Feedback</span>
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
 
-          {filteredFeedback.length === 0 && (
+          {!loading && !error && filteredFeedback.length === 0 && (
             <div className="text-center py-8">
               <ThumbsUp size={48} className="mx-auto text-gray-400 mb-4" />
-              <p className="text-gray-500">No feedback requests found</p>
+              <p className="text-gray-500">No teachers found to provide feedback</p>
             </div>
           )}
         </div>

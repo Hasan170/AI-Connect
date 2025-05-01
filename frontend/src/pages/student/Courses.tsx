@@ -165,18 +165,18 @@ const Courses: React.FC = () => {
         />
         {enrolled && course.progress !== undefined && (
           <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-70 text-white text-xs py-1 px-3">
-            <div className="w-full bg-gray-500 rounded-full h-1.5 mb-1">
+            {/* <div className="w-full bg-gray-500 rounded-full h-1.5 mb-1">
               <div 
                 className="bg-white rounded-full h-1.5" 
                 style={{ width: `${course.progress}%` }}
               ></div>
-            </div>
-            <div className="flex justify-between">
+            </div> */}
+            {/* <div className="flex justify-between">
               <span>{course.progress}% complete</span>
               {course.completedModules && (
                 <span>{course.completedModules}/{course.totalModules} modules</span>
               )}
-            </div>
+            </div> */}
           </div>
         )}
       </div>
