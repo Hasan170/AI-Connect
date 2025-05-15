@@ -27,7 +27,7 @@ interface FeedbackFormData {
 
 const TutorProfile = () => {
   const navigate = useNavigate();
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  // const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
   const [timeLeft, setTimeLeft] = useState(1800); 
   const [selectedStudent, setSelectedStudent] = useState<StudentFeedback | null>(null);
@@ -134,10 +134,10 @@ const TutorProfile = () => {
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
-  const handleEditSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsEditModalOpen(false);
-  };
+  // const handleEditSubmit = (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   setIsEditModalOpen(false);
+  // };
 
   const startClass = (classId: string) => {
     navigate(`/class/${classId}`);
@@ -236,12 +236,12 @@ const TutorProfile = () => {
             <div className="bg-white p-6 rounded-lg shadow-md transform hover:scale-[1.02] transition-all duration-300">
               <div className="flex justify-between items-start mb-4">
                 <h2 className="text-xl font-semibold text-text-primary">Profile</h2>
-                <button 
+                {/* <button 
                   onClick={() => setIsEditModalOpen(true)}
                   className="text-navbar hover:text-button-secondary transition-colors"
-                >
-                  <Edit size={20} />
-                </button>
+                > */}
+                  {/* <Edit size={20} />
+                </button> */}
               </div>
               <div className="space-y-4">
                 <div className="flex items-center gap-3">
@@ -265,10 +265,6 @@ const TutorProfile = () => {
                       </span>
                     ))}
                   </div>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Teaching Hours</p>
-                  <p className="font-medium">{profileData.teachingHours}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Rating</p>
@@ -359,11 +355,8 @@ const TutorProfile = () => {
                   )}
                   
                   <div className="flex gap-2">
-                    <button className="flex-1 bg-navbar text-white py-2 rounded-lg hover:bg-button-secondary transition-colors transform hover:scale-[1.05]">
-                      View Progress
-                    </button>
                     <button 
-                      className="flex-1 bg-card text-text-primary py-2 rounded-lg hover:bg-gray-300 transition-colors transform hover:scale-[1.05]"
+                      className="flex-1 bg-navbar text-white py-2 rounded-lg hover:bg-button-secondary transition-colors transform hover:scale-[1.05]"
                       onClick={() => handleFeedbackOpen(student)}
                     >
                       {student.feedback ? 'Edit Feedback' : 'Send Feedback'}
@@ -381,7 +374,7 @@ const TutorProfile = () => {
         </div>
       </div>
 
-      {/* Edit Profile Modal */}
+      {/* Edit Profile Modal
       {isEditModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg w-96 transform scale-100 transition-transform duration-300">
@@ -434,7 +427,7 @@ const TutorProfile = () => {
             </form>
           </div>
         </div>
-      )}
+      )} */}
 
       {/* Send Feedback Modal */}
       {isFeedbackModalOpen && selectedStudent && (

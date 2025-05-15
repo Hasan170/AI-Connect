@@ -29,7 +29,6 @@ import AdminFeedback from './pages/admin/Feedback';
 // Student pages
 import MyClasses from './pages/student/MyClasses';
 import Schedule from './pages/student/Schedule';
-import Assignments from './pages/student/Assignments';
 import TeachersPage from './pages/student/Teachers';
 import ResourcesPage from './pages/student/Resources';
 import FeeDetails from './pages/student/FeeDetails';
@@ -43,7 +42,7 @@ function App() {
     '/admin-dashboard', '/student-profile', '/tutor-profile', 
     '/admin/students', '/admin/teachers', '/admin/resources', 
     '/student/classes', '/student/schedule', 
-    '/student/assignments', '/student/teachers', '/student/resources', 
+    '/student/teachers', '/student/resources', 
     '/student/fee-details', '/student/feedback', '/student/MyCourses', 
     '/class/:classId', '/student/Courses', '/admin/feedback',
     '/admin/subject-requests',
@@ -77,7 +76,6 @@ function App() {
           {/* Student routes */}
           <Route path="/student/classes" element={<MyClasses />} />
           <Route path="/student/schedule" element={<Schedule />} />
-          <Route path="/student/assignments" element={<Assignments />} />
           <Route path="/student/teachers" element={<TeachersPage />} />
           <Route path="/student/resources" element={<ResourcesPage />} />
           <Route path="/student/fee-details" element={<FeeDetails />} />
