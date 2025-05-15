@@ -30,6 +30,7 @@ const Feedback = () => {
   const [error, setError] = useState('');
   const [studentId, setStudentId] = useState<string | null>(null);
   const [isAddingNewFeedback, setIsAddingNewFeedback] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     const fetchStudentData = async () => {
@@ -81,14 +82,32 @@ const Feedback = () => {
       return;
     }
     
+    if (selectedRating < 1) {
+      alert('Please select a rating (1-5 stars)');
+      return;
+    }
+    
+    if (!feedbackText.trim()) {
+      alert('Please enter your feedback');
+      return;
+    }
+    
+    setSubmitting(true);
+    
     try {
-      const response = await api.post('/feedback/submit', {
+      // Create payload with all required fields including feedbackType
+      const payload = {
         studentId,
         teacherId,
         subject: selectedSubject,
         rating: selectedRating,
-        feedback: feedbackText
-      });
+        feedback: feedbackText,
+        feedbackType: 'studentToTutor' // This is required by the backend model
+      };
+      
+      console.log('Submitting feedback with payload:', payload);
+      
+      const response = await api.post('/feedback/submit', payload);
       
       const newFeedback = response.data.feedback;
       
@@ -125,9 +144,27 @@ const Feedback = () => {
       setSelectedSubject('');
       
       alert('Feedback submitted successfully!');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error submitting feedback:', error);
-      alert('Failed to submit feedback. Please try again.');
+      
+      // More detailed error handling
+      let errorMessage = 'Failed to submit feedback. Please try again.';
+      
+      if (error.response) {
+        // The server responded with a status code outside the 2xx range
+        console.log('Error response data:', error.response.data);
+        errorMessage = error.response.data.message || errorMessage;
+      } else if (error.request) {
+        // The request was made but no response was received
+        errorMessage = 'No response from server. Please check your connection.';
+      } else {
+        // Something happened in setting up the request
+        errorMessage = error.message || errorMessage;
+      }
+      
+      alert(`Error: ${errorMessage}`);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -301,21 +338,26 @@ const Feedback = () => {
                           }}
                           className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
                           type="button"
+                          disabled={submitting}
                         >
                           Cancel
                         </button>
                         <button
                           onClick={() => handleSubmitFeedback(item.id)}
-                          disabled={!selectedRating || !feedbackText.trim() || !selectedSubject}
+                          disabled={!selectedRating || !feedbackText.trim() || !selectedSubject || submitting}
                           className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                            !selectedRating || !feedbackText.trim() || !selectedSubject
+                            !selectedRating || !feedbackText.trim() || !selectedSubject || submitting
                               ? 'bg-gray-300 text-gray-600 cursor-not-allowed' 
                               : 'bg-navbar text-white hover:bg-opacity-90'
                           }`}
                           type="button"
                         >
-                          <Send size={16} />
-                          Submit Feedback
+                          {submitting ? (
+                            <span className="inline-block h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>
+                          ) : (
+                            <Send size={16} />
+                          )}
+                          {submitting ? 'Submitting...' : 'Submit Feedback'}
                         </button>
                       </div>
                     </div>

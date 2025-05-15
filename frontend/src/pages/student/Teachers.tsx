@@ -209,22 +209,6 @@ const Teachers = () => {
                       </span>
                     </div>
                   </div>
-
-                  <div className="mt-4 grid grid-cols-2 gap-3">
-                    <button 
-                      className="flex items-center justify-center gap-2 px-4 py-2 bg-navbar text-white rounded-lg hover:bg-opacity-90 transition-colors"
-                      onClick={() => window.location.href = `mailto:${teacher.email}`}
-                    >
-                      <Mail size={16} />
-                      Contact
-                    </button>
-                    <button 
-                      className="flex items-center justify-center gap-2 px-4 py-2 border border-navbar text-navbar rounded-lg hover:bg-navbar hover:text-white transition-all duration-300"
-                    >
-                      <BookOpen size={16} />
-                      Schedule Class
-                    </button>
-                  </div>
                 </div>
               ))}
             </div>

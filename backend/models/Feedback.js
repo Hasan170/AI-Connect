@@ -18,16 +18,20 @@ const feedbackSchema = new mongoose.Schema({
   rating: {
     type: Number,
     required: function() {
-      // Rating is only required for student-to-tutor feedback
       return this.feedbackType === 'studentToTutor';
     },
-    min: function() {
-      // Min value is only enforced for student-to-tutor feedback
-      return this.feedbackType === 'studentToTutor' ? 1 : 0;
+    validate: {
+      validator: function(value) {
+        // If this is studentToTutor feedback, value must be between 1-5
+        if (this.feedbackType === 'studentToTutor') {
+          return value >= 1 && value <= 5;
+        }
+        // For tutorToStudent, allow null or any value
+        return true;
+      },
+      message: 'Rating must be between 1 and 5 for student feedback'
     },
-    max: 5,
     default: function() {
-      // Default to null for tutor-to-student feedback
       return this.feedbackType === 'tutorToStudent' ? null : undefined;
     }
   },

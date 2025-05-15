@@ -16,7 +16,6 @@ const StudentSidebar: React.FC<StudentSidebarProps> = ({ onNotebookClick }) => {
     { title: 'My Classes', icon: <BookOpen size={20} />, path: '/student/classes' },
     { title: 'Calendar', icon: <Calendar size={20} />, path: '/student/schedule' },
     { title: 'My Courses', icon: <FaBook size={20} />, path: '/student/Courses' }, 
-    { title: 'Assignments', icon: <ClipboardList size={20} />, path: '/student/assignments' },
     { title: 'My Teachers', icon: <Users size={20} />, path: '/student/teachers' },
     { title: 'Resources', icon: <FileText size={20} />, path: '/student/resources' },
     { title: 'Fee Details', icon: <DollarSign size={20} />, path: '/student/fee-details' },
