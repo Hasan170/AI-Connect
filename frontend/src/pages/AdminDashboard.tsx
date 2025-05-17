@@ -67,12 +67,12 @@ const TimeSelectionModal: React.FC<TimeSelectionModalProps> = ({ isOpen, onClose
   );
 };
 
+
 export default function AdminDashboard() {
   const stats = [
-    { title: 'Total Users', value: '1,234', icon: <Users className="w-6 h-6" />, change: '+12%', bgColor: 'bg-blue-50' },
-    { title: 'Active Classes', value: '156', icon: <BookOpen className="w-6 h-6" />, change: '+8%', bgColor: 'bg-green-50' },
-    { title: 'Revenue', value: '$12,345', icon: <DollarSign className="w-6 h-6" />, change: '+15%', bgColor: 'bg-yellow-50' },
-    { title: 'User Growth', value: '23%', icon: <Activity className="w-6 h-6" />, change: '+5%', bgColor: 'bg-purple-50' },
+    { title: 'Total Users', value: '7', icon: <Users className="w-6 h-6" />,  bgColor: 'bg-blue-50' },
+    { title: 'Active Classes', value: '12', icon: <BookOpen className="w-6 h-6" />, bgColor: 'bg-green-50' },
+    { title: 'Revenue', value: '$1,500', icon: <DollarSign className="w-6 h-6" />, bgColor: 'bg-yellow-50' },
   ];
 
   const [studentRequests, setStudentRequests] = useState<ClassRequest[]>([
@@ -148,7 +148,7 @@ export default function AdminDashboard() {
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
             {stats.map((stat, index) => (
               <div
                 key={index}
@@ -161,7 +161,6 @@ export default function AdminDashboard() {
                   </div>
                   <div className="text-navbar">{stat.icon}</div>
                 </div>
-                <p className="text-green-600 text-sm mt-2">{stat.change} this month</p>
               </div>
             ))}
           </div>
