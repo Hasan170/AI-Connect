@@ -374,61 +374,6 @@ const TutorProfile = () => {
         </div>
       </div>
 
-      {/* Edit Profile Modal
-      {isEditModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-96 transform scale-100 transition-transform duration-300">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-semibold">Edit Profile</h3>
-              <button 
-                onClick={() => setIsEditModalOpen(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <X size={20} />
-              </button>
-            </div>
-            <form onSubmit={handleEditSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                <input
-                  type="text"
-                  value={profileData.name}
-                  onChange={(e) => setProfileData({...profileData, name: e.target.value})}
-                  className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-navbar focus:outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Teaching Hours</label>
-                <input
-                  type="text"
-                  value={profileData.teachingHours}
-                  onChange={(e) => setProfileData({...profileData, teachingHours: e.target.value})}
-                  className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-navbar focus:outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Rating</label>
-                <input
-                  type="number"
-                  step="0.1"
-                  min="0"
-                  max="5"
-                  value={profileData.rating}
-                  onChange={(e) => setProfileData({...profileData, rating: parseFloat(e.target.value)})}
-                  className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-navbar focus:outline-none"
-                />
-              </div>
-              <button
-                type="submit"
-                className="w-full bg-navbar text-white py-2 rounded-lg hover:bg-button-secondary transition-colors"
-              >
-                Save
-              </button>
-            </form>
-          </div>
-        </div>
-      )} */}
-
       {/* Send Feedback Modal */}
       {isFeedbackModalOpen && selectedStudent && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
