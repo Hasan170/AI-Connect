@@ -1,4 +1,3 @@
-// backend/models/ScheduledClass.js
 const mongoose = require('mongoose');
 
 const scheduledClassSchema = new mongoose.Schema({
@@ -9,7 +8,8 @@ const scheduledClassSchema = new mongoose.Schema({
   time: { type: String, required: true },
   status: { type: String, enum: ['scheduled', 'completed', 'rescheduled'], default: 'scheduled' },
   meetingLink: { type: String, required: true }, 
-  meetingId: { type: String, required: true, unique: true } 
+  meetingId: { type: String, required: true, unique: true },
+  fees: { type: String, enum: ['Paid', 'Not paid'], default: null }
 });
 
 // Add compound index to prevent duplicate scheduling
@@ -18,11 +18,4 @@ scheduledClassSchema.index(
   { unique: true, name: 'prevent_duplicate_classes' }
 );
 
-// scheduledClassSchema.virtual('dateTime').get(function() {
-//   return this.datetime.toISOString();
-// });
-
-// scheduledClassSchema.set('toJSON', { virtuals: true });
-// scheduledClassSchema.set('toObject', { virtuals: true });
-
-module.exports = mongoose.model('ScheduledClass', scheduledClassSchema);
+module.exports = mongoose.model('scheduledclass', scheduledClassSchema);

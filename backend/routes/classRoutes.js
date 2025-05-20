@@ -12,4 +12,8 @@ router.get('/teacher/:teacherId/students', classController.getTeacherStudents); 
 // router.patch('/:classId/complete', classController.completeClass);
 router.patch('/:classId/complete', validateClassId, classController.completeClass);
 
+router.get('/fees/unpaid/:studentId', classController.getUnpaidFees);
+router.post('/fees/pay', classController.markFeesAsPaid);
+router.patch('/complete/:classId', classController.completeClass);
+
 module.exports = router;

@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Line } from 'react-chartjs-2';
-import { Edit, Bell, Book, Calendar, X, CheckCircle, Clock, User, Video, Plus } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Edit, Bell, Book, Calendar, X, CheckCircle, Clock, User, Video, Plus, File } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../api';
 import StudentSidebar from '../components/StudentSidebar';
@@ -22,7 +21,6 @@ interface ClassData {
   date?: Date;
   time?: string;
   tutor?: string;
-  // studentId?: string;
 }
 
 const StudentProfile = () => {
@@ -86,7 +84,6 @@ const StudentProfile = () => {
         // Set subjects for display
         setSubjects(subjects);
         
-
         // Fetch class requests and scheduled classes
         const requestsRes = await api.get(`/requests/student/${student._id}`);
         const classesRes = await api.get(`/classes/student/${student._id}`);
@@ -106,14 +103,6 @@ const StudentProfile = () => {
           };
         });
 
-        setProfileData({
-          name: student.name,
-          grade: student.grade,
-          schoolBoard: student.schoolBoard,
-          dob: student.dateOfBirth,
-        });
-        // setSubjects(student.subjects.split(', '));
-        setSubjects(student.subjects.map((s: any) => s.subject));
         setClassRequests(mergedClasses);
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -136,7 +125,6 @@ const StudentProfile = () => {
         const studentId = studentRes.data._id;
         
         // Then get scheduled classes
-        // const classesRes = await api.get(`/classes/student/${studentId}`);
         const classesRes = await api.get(`/classes/student/${studentId}?status=scheduled`);
         setClasses(classesRes.data.map((cls: { _id: any; subject: any; status: any; date: string | number | Date; time: any; teacherId: { name: any; }; }) => ({
           id: cls._id,
@@ -148,48 +136,14 @@ const StudentProfile = () => {
         })));
       } catch (error) {
         console.error('Error fetching classes:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchStudentDetails();
     fetchScheduledClasses();
   }, [navigate]);
-
-  const chartData = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
-    datasets: [
-      {
-        label: 'Math',
-        data: [65, 75, 70, 80, 85],
-        borderColor: '#245F73',
-        tension: 0.4,
-      },
-      {
-        label: 'Science',
-        data: [70, 72, 78, 82, 80],
-        borderColor: '#733E24',
-        tension: 0.4,
-      },
-    ],
-  };
-
-  
-
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: 'top' as const,
-      }
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        max: 100,
-      }
-    }
-  };
 
   const handleEditSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -264,6 +218,263 @@ const StudentProfile = () => {
       alert(`Failed to submit request: ${error.response?.data?.message || error.message}`);
     }
   };
+
+  // Fee Overview Component
+  const FeeOverview = () => {
+    const [feeData, setFeeData] = useState({
+      totalDue: 0,
+      unpaidClassCount: 0,
+      unpaidClassIds: [] as string[],
+      lastPaymentDate: null as Date | null,
+      loading: true,
+      error: null as string | null
+    });
+    const [isLoading, setIsLoading] = useState(false);
+    const razorpayLoaded = useRef(false);
+
+    useEffect(() => {
+      if (!razorpayLoaded.current) {
+        const script = document.createElement('script');
+        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+        script.async = true;
+        script.onload = () => {
+          razorpayLoaded.current = true;
+        };
+        document.body.appendChild(script);
+        
+        return () => {
+          document.body.removeChild(script);
+        };
+      }
+    }, []);
+
+    useEffect(() => {
+      fetchFeeData();
+    }, []);
+
+    const fetchFeeData = async () => {
+      try {
+        const email = localStorage.getItem('studentEmail');
+        if (!email) return;
+        
+        // First get student details to get ID
+        const studentRes = await api.get(`/student/details/${email}`);
+        const studentId = studentRes.data._id;
+        
+        // Then get unpaid fees
+        const feesRes = await api.get(`/classes/fees/unpaid/${studentId}`);
+        
+        setFeeData({
+          totalDue: feesRes.data.data.totalDue || 0,
+          unpaidClassCount: feesRes.data.data.unpaidClassCount || 0,
+          unpaidClassIds: feesRes.data.data.unpaidClassIds || [],
+          lastPaymentDate: null,
+          loading: false,
+          error: null
+        });
+      } catch (error) {
+        console.error('Error fetching fee data:', error);
+        setFeeData(prev => ({
+          ...prev,
+          loading: false,
+          error: 'Failed to load fee information'
+        }));
+      }
+    };
+
+    const handleMakePayment = () => {
+      if (feeData.totalDue <= 0) {
+        alert('No payment due.');
+        return;
+      }
+      
+      setIsLoading(true);
+      
+      const options = {
+        key: 'rzp_live_VVQ3SO2EEv78so',
+        amount: feeData.totalDue * 100, // Razorpay expects amount in paise
+        currency: 'INR',
+        name: 'AI-Connect',
+        description: `Payment for ${feeData.unpaidClassCount} classes`,
+        image: 'https://your-logo-url.com/logo.png',
+        handler: async function(response: any) {
+          try {
+            const email = localStorage.getItem('studentEmail');
+            if (!email) return;
+            
+            // Mark classes as paid
+            await api.post('/classes/fees/pay', {
+              classIds: feeData.unpaidClassIds,
+              paymentId: response.razorpay_payment_id
+            });
+            
+            // Refresh fee data
+            fetchFeeData();
+            
+            alert('Payment successful! Payment ID: ' + response.razorpay_payment_id);
+          } catch (error) {
+            console.error('Error updating payment status:', error);
+            alert('Payment recorded but failed to update status. Please contact support.');
+          }
+          
+          setIsLoading(false);
+        },
+        prefill: {
+          name: profileData.name,
+          email: localStorage.getItem('studentEmail') || '',
+          contact: ''
+        },
+        theme: {
+          color: '#3c4e92'
+        },
+        modal: {
+          ondismiss: function() {
+            setIsLoading(false);
+          }
+        }
+      };
+
+      try {
+        if (typeof window.Razorpay === 'function') {
+          const paymentObject = new window.Razorpay(options);
+          paymentObject.open();
+        } else {
+          alert("Payment gateway is loading. Please try again in a moment.");
+          setIsLoading(false);
+        }
+      } catch (err) {
+        console.error("Error initializing Razorpay", err);
+        alert("Unable to load payment gateway. Please try again later.");
+        setIsLoading(false);
+      }
+    };
+
+    const formatCurrency = (amount: number) => {
+      return new Intl.NumberFormat('en-IN', {
+        style: 'currency',
+        currency: 'INR'
+      }).format(amount);
+    };
+
+    if (feeData.loading) {
+      return (
+        <div className="flex justify-center items-center h-48">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-navbar"></div>
+        </div>
+      );
+    }
+
+    if (feeData.error) {
+      return (
+        <div className="bg-red-50 p-4 rounded-lg">
+          <p className="text-red-600">Error: {feeData.error}</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="grid md:grid-cols-2 gap-6">
+        {/* Payment Due Card */}
+        <div className="bg-white rounded-lg p-5 flex items-center">
+          <div className="w-14 h-14 rounded-full bg-navbar bg-opacity-10 flex items-center justify-center mr-4">
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              width="24" 
+              height="24" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeWidth="2" 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              className="text-navbar"
+            >
+              <rect width="20" height="12" x="2" y="6" rx="2" />
+              <circle cx="12" cy="12" r="2" />
+              <path d="M6 12h.01M18 12h.01" />
+            </svg>
+          </div>
+          <div>
+            <p className="text-gray-500 text-sm">Total Payment Due</p>
+            <p className="text-2xl font-bold text-text-primary">{formatCurrency(feeData.totalDue)}</p>
+            {feeData.unpaidClassCount > 0 && (
+              <p className="text-xs text-gray-500 mt-1">
+                For {feeData.unpaidClassCount} completed {feeData.unpaidClassCount === 1 ? 'class' : 'classes'}
+              </p>
+            )}
+          </div>
+        </div>
+        
+        {/* Quick Actions Card */}
+        <div className="bg-white rounded-lg p-5">
+          <p className="text-gray-500 text-sm mb-4">Quick Actions</p>
+          <div className="space-y-3">
+            <button
+              onClick={handleMakePayment}
+              disabled={feeData.totalDue <= 0 || isLoading}
+              className={`w-full py-2 px-4 rounded flex items-center justify-center gap-2 transition-colors
+                ${feeData.totalDue <= 0 || isLoading 
+                  ? 'bg-gray-300 text-gray-600 cursor-not-allowed' 
+                  : 'bg-navbar text-white hover:bg-opacity-90'}`}
+            >
+              {isLoading ? (
+                <>
+                  <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2"></span>
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect width="20" height="14" x="2" y="5" rx="2" />
+                    <line x1="2" x2="22" y1="10" y2="10" />
+                  </svg>
+                  Make Payment
+                </>
+              )}
+            </button>
+            <Link to="/student/fee-details" className="w-full bg-white border border-gray-200 text-text-primary py-2 px-4 rounded flex items-center justify-center gap-2 hover:bg-gray-50 transition-all">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
+                <line x1="16" x2="16" y1="2" y2="6" />
+                <line x1="8" x2="8" y1="2" y2="6" />
+                <line x1="3" x2="21" y1="10" y2="10" />
+                <path d="M8 14h.01" />
+                <path d="M12 14h.01" />
+                <path d="M16 14h.01" />
+                <path d="M8 18h.01" />
+                <path d="M12 18h.01" />
+                <path d="M16 18h.01" />
+              </svg>
+              View Full Details
+            </Link>
+          </div>
+        </div>
+        
+        {/* Payment Status Visual */}
+        <div className="md:col-span-2 bg-white border border-gray-100 rounded-lg p-5">
+          <div className="flex justify-between items-center mb-3">
+            <p className="text-gray-500 text-sm">Payment Status</p>
+            <span className={`px-2 py-1 rounded-full text-xs font-medium ${feeData.totalDue > 0 ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>
+              {feeData.totalDue > 0 ? 'Payment Pending' : 'All Paid'}
+            </span>
+          </div>
+          
+          {feeData.totalDue > 0 ? (
+            <div className="mt-2">
+              <div className="w-full bg-gray-200 rounded-full h-2.5">
+                <div className="bg-navbar h-2.5 rounded-full" style={{ width: '100%' }}></div>
+              </div>
+              <p className="text-xs text-gray-500 mt-2">
+                {feeData.unpaidClassCount} {feeData.unpaidClassCount === 1 ? 'class' : 'classes'} pending payment at ₹500 per class
+              </p>
+            </div>
+          ) : (
+            <p className="text-sm text-gray-500">You have no pending payments. Great job staying up to date!</p>
+          )}
+        </div>
+      </div>
+    );
+  };
   
   return (
     <div className="flex">
@@ -276,7 +487,7 @@ const StudentProfile = () => {
             <p className="text-gray-500 mt-2">Let's continue your learning journey</p>
           </div>
 
-          {/* Profile and Progress Section */}
+          {/* Profile and Fee Summary Section */}
           <div className="grid md:grid-cols-3 gap-6 mb-6">
             {/* Profile Card */}
             <div className="bg-white p-6 rounded-lg shadow-md transform hover:scale-[1.02] transition-all duration-300">
@@ -318,7 +529,7 @@ const StudentProfile = () => {
                     subjects.map((subject) => (
                       <span
                         key={subject}
-                        className="bg-card px-3 py-1 rounded-full text-sm text-text-primary transform hover:scale-105 transition-all duration-300"
+                        className="bg-white border border-gray-200 px-3 py-1 rounded-full text-sm text-text-primary transform hover:scale-105 transition-all duration-300"
                       >
                         {subject}
                       </span>
@@ -338,27 +549,28 @@ const StudentProfile = () => {
               </div>
             </div>
 
-            {/* Progress Chart */}
+            {/* Fee Summary - Replacing Progress Overview */}
             <div className="md:col-span-2 bg-white p-6 rounded-lg shadow-md transform hover:scale-[1.02] transition-all duration-300">
-              <h2 className="text-xl font-semibold text-text-primary mb-4">Progress Overview</h2>
-              <div className="h-64">
-                <Line data={chartData} options={chartOptions} />
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-semibold text-text-primary">Fee Summary</h2>
               </div>
+              
+              <FeeOverview />
             </div>
           </div>
 
-            {/* Enrolled Classes Section */}
-            {loading ? (
-              <div className="flex justify-center items-center h-screen">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-navbar"></div>
-              </div>
-            ) : error ? (
-              <div className="flex justify-center items-center h-screen">
-                <div className="text-red-500">{error}</div>
-              </div>
-            ) : (
-              <div className="grid md:grid-cols-3 gap-6 mb-6">
-                {classRequests.map((classItem) => (
+          {/* Enrolled Classes Section */}
+          {loading ? (
+            <div className="flex justify-center items-center h-48">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-navbar"></div>
+            </div>
+          ) : error ? (
+            <div className="flex justify-center items-center h-48">
+              <div className="text-red-500">{error}</div>
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-3 gap-6 mb-6">
+              {classRequests.map((classItem) => (
                 <div key={classItem.subject} className="bg-white p-6 rounded-lg shadow-md transform hover:scale-[1.02] transition-all duration-300">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold text-text-primary">
@@ -367,42 +579,42 @@ const StudentProfile = () => {
                     <Book className="text-navbar" size={20} />
                   </div>
                   {classItem.status === 'scheduled' ? (
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-green-600">
-                      <CheckCircle size={16} />
-                      <p className="text-sm">Class Scheduled</p>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-green-600">
+                        <CheckCircle size={16} />
+                        <p className="text-sm">Class Scheduled</p>
+                      </div>
+                      <div className="flex items-center gap-2 text-gray-600">
+                        <Clock size={16} />
+                        <p className="text-sm">{classItem.time}</p>
+                      </div>
+                      <p className="text-sm text-gray-600">Tutor: {classItem.tutor}</p>
+                      <div className="flex gap-2 mt-4">
+                        <Link
+                          to={`/class/${classItem.id}`}
+                          className="flex-1 bg-navbar text-white py-2 rounded-lg hover:bg-opacity-90 transition-colors flex items-center justify-center gap-2"
+                        >
+                          <Video size={16} />
+                          Join Class
+                        </Link>
+                        <button
+                          onClick={() => handleRescheduleClass(classItem)}
+                          className="flex-1 bg-white border border-gray-200 text-text-primary py-2 rounded-lg hover:bg-gray-50 transition-colors"
+                        >
+                          Reschedule
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <Clock size={16} />
-                      <p className="text-sm">{classItem.time}</p>
+                  ) : (classItem.status === 'pending' ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-yellow-600">
+                        <Clock size={16} />
+                        <p className="text-sm">Request Pending Approval</p>
+                      </div>
                     </div>
-                    <p className="text-sm text-gray-600">Tutor: {classItem.tutor}</p>
-                    <div className="flex gap-2 mt-4">
-                      <Link
-                        to={`/class/${classItem.id}`}
-                        className="flex-1 bg-navbar text-white py-2 rounded-lg hover:bg-opacity-90 transition-colors flex items-center justify-center gap-2"
-                      >
-                        <Video size={16} />
-                        Join Class
-                      </Link>
-                      <button
-                        onClick={() => handleRescheduleClass(classItem)}
-                        className="flex-1 bg-card text-text-primary py-2 rounded-lg hover:bg-gray-200 transition-colors"
-                      >
-                        Reschedule
-                      </button>
-                    </div>
-                  </div>
-                ) : (classItem.status === 'pending' ? (
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-yellow-600">
-                      <Clock size={16} />
-                      <p className="text-sm">Request Pending Approval</p>
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    <p className="text-gray-500 mb-4">No class scheduled</p>
+                  ) : (
+                    <>
+                      <p className="text-gray-500 mb-4">No class scheduled</p>
                       <button
                         onClick={() => {
                           setSelectedClass(classItem);
@@ -411,12 +623,12 @@ const StudentProfile = () => {
                         className="w-full bg-navbar text-white py-2 rounded-lg hover:bg-button-secondary transition-colors transform hover:scale-[1.02]">
                         Request Class
                       </button>
-                  </>
-                ))}
-              </div>
-            ))}
-          </div>
-            )}
+                    </>
+                  ))}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Edit Profile Modal */}
@@ -572,5 +784,12 @@ const StudentProfile = () => {
     </div>
   );
 };
+
+// Add this type declaration for Razorpay
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
 
 export default StudentProfile;

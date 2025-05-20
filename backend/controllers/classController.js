@@ -22,9 +22,20 @@ exports.completeClass = async (req, res) => {
   try {
     const { classId } = req.params;
 
+    console.log('[COMPLETE CLASS] Marking class as completed:', classId);
+
     // Add status validation
     const existingClass = await ScheduledClass.findById(classId);
+    if (!existingClass) {
+      console.log('[COMPLETE CLASS] Class not found:', classId);
+      return res.status(404).json({
+        success: false,
+        message: 'Class not found'
+      });
+    }
+    
     if (existingClass.status === 'completed') {
+      console.log('[COMPLETE CLASS] Class already completed:', classId);
       return res.status(400).json({
         success: false,
         message: 'Class already completed'
@@ -41,16 +52,26 @@ exports.completeClass = async (req, res) => {
 
     const updatedClass = await ScheduledClass.findByIdAndUpdate(
       classId,
-      { status: 'completed' },
+      { 
+        status: 'completed',
+        fees: 'Not paid'  // Set fees to Not paid when class is completed
+      },
       { new: true, runValidators: true }
     ).populate('studentId teacherId', 'name email');
 
     if (!updatedClass) {
+      console.log('[COMPLETE CLASS] Failed to update class:', classId);
       return res.status(404).json({
         success: false,
         message: 'Class not found'
       });
     }
+
+    console.log('[COMPLETE CLASS] Successfully updated class:', {
+      id: updatedClass._id,
+      status: updatedClass.status,
+      fees: updatedClass.fees
+    });
 
     res.status(200).json({
       success: true,
@@ -235,6 +256,126 @@ exports.getTeacherStudents = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to fetch students assigned to teacher',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
+exports.getUnpaidFees = async (req, res) => {
+  try {
+    const { studentId } = req.params;
+    
+    console.log('[GET UNPAID FEES] Received request for studentId:', studentId);
+
+    if (!mongoose.Types.ObjectId.isValid(studentId)) {
+      return res.status(400).json({ 
+        success: false,
+        message: 'Invalid student ID format' 
+      });
+    }
+
+    // First check if the studentId exists
+    const studentExists = await mongoose.model('studentdetail').findById(studentId);
+    if (!studentExists) {
+      return res.status(404).json({
+        success: false,
+        message: 'Student not found'
+      });
+    }
+
+    // Find all completed classes with unpaid fees
+    // Use case-insensitive query for the fees field to handle any case mismatches
+    const unpaidClasses = await ScheduledClass.find({
+      studentId: studentId,
+      status: 'completed',
+      $or: [
+        { fees: 'Not paid' },
+        { fees: 'not paid' },
+        { fees: 'NOT PAID' },
+        { fees: null }  // Also include if fees field is null
+      ]
+    });
+    
+    console.log('[GET UNPAID FEES] Found unpaid classes:', unpaidClasses.length);
+    
+    // Log each unpaid class for debugging
+    unpaidClasses.forEach((cls, index) => {
+      console.log(`[GET UNPAID FEES] Class ${index + 1}:`, {
+        id: cls._id,
+        status: cls.status,
+        fees: cls.fees,
+        date: cls.date
+      });
+    });
+
+    // Calculate total due (Rs 500 per class)
+    const classFee = 500;
+    const totalDue = unpaidClasses.length * classFee;
+    const unpaidClassIds = unpaidClasses.map(cls => cls._id);
+
+    const responseData = {
+      unpaidClassCount: unpaidClasses.length,
+      totalDue: totalDue,
+      unpaidClassIds: unpaidClassIds,
+      feePerClass: classFee
+    };
+    
+    console.log('[GET UNPAID FEES] Response data:', responseData);
+
+    res.status(200).json({
+      success: true,
+      data: responseData
+    });
+
+  } catch (error) {
+    console.error('[GET UNPAID FEES ERROR]', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch unpaid fees',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
+// Add new function to mark fees as paid
+exports.markFeesAsPaid = async (req, res) => {
+  try {
+    const { classIds } = req.body;
+    
+    if (!Array.isArray(classIds) || classIds.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid class IDs provided'
+      });
+    }
+
+    // Validate all class IDs
+    for (const id of classIds) {
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({
+          success: false,
+          message: `Invalid class ID format: ${id}`
+        });
+      }
+    }
+
+    // Update all specified classes
+    const result = await ScheduledClass.updateMany(
+      { _id: { $in: classIds } },
+      { fees: 'Paid' }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: `${result.modifiedCount} classes marked as paid`,
+      modifiedCount: result.modifiedCount
+    });
+
+  } catch (error) {
+    console.error('[MARK FEES PAID ERROR]', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to mark fees as paid',
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
