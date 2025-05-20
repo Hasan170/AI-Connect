@@ -189,34 +189,45 @@ const StudentProfile = () => {
     setIsRescheduleModalOpen(true);
   };
 
+  // const handleSubjectRequest = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   try {
+  //     const email = localStorage.getItem('studentEmail');
+  //     if (!email) {
+  //       alert('You must be logged in to request a subject');
+  //       return;
+  //     }
+
+  //     const studentRes = await api.get(`/student/details/${email}`);
+  //     const studentId = studentRes.data._id;
+
+  //     await api.post('/requests/subject', {
+  //       studentId,
+  //       subject: newSubjectRequest.subject,
+  //       reason: newSubjectRequest.reason
+  //     });
+
+  //     alert('Subject request submitted successfully!');
+  //     setIsSubjectModalOpen(false);
+  //     setNewSubjectRequest({
+  //       subject: '',
+  //       reason: ''
+  //     });
+  //   } catch (error: any) {
+  //     console.error('Error submitting subject request:', error);
+  //     alert(`Failed to submit request: ${error.response?.data?.message || error.message}`);
+  //   }
+  // };
+
   const handleSubjectRequest = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const email = localStorage.getItem('studentEmail');
-      if (!email) {
-        alert('You must be logged in to request a subject');
-        return;
-      }
-
-      const studentRes = await api.get(`/student/details/${email}`);
-      const studentId = studentRes.data._id;
-
-      await api.post('/requests/subject', {
-        studentId,
-        subject: newSubjectRequest.subject,
-        reason: newSubjectRequest.reason
-      });
-
-      alert('Subject request submitted successfully!');
-      setIsSubjectModalOpen(false);
-      setNewSubjectRequest({
-        subject: '',
-        reason: ''
-      });
-    } catch (error: any) {
-      console.error('Error submitting subject request:', error);
-      alert(`Failed to submit request: ${error.response?.data?.message || error.message}`);
+  e.preventDefault();
+  try {
+    const email = localStorage.getItem('studentEmail');
+    if (!email) {
+      alert('You must be logged in to request a subject');
+      return;
     }
+<<<<<<< Updated upstream
   };
 
   // Fee Overview Component
@@ -475,6 +486,31 @@ const StudentProfile = () => {
       </div>
     );
   };
+=======
+
+    // Get student ID
+    const studentRes = await api.get(`/student/details/${email}`);
+    const studentId = studentRes.data._id;
+
+    await api.post('/requests/subject', {
+      studentId, // Send student ID instead of email
+      subject: newSubjectRequest.subject,
+      reason: newSubjectRequest.reason
+    });
+
+    alert('Subject request submitted successfully!');
+    setIsSubjectModalOpen(false);
+    setNewSubjectRequest({ subject: '', reason: '' });
+    
+    // Refresh subjects list
+    const updatedStudent = await api.get(`/student/details/${email}`);
+    setSubjects(updatedStudent.data.subjects.map((s: any) => s.subject));
+  } catch (error: any) {
+    console.error('Error submitting subject request:', error);
+    alert(`Failed to submit request: ${error.response?.data?.message || error.message}`);
+  }
+};
+>>>>>>> Stashed changes
   
   return (
     <div className="flex">

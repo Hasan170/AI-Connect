@@ -33,37 +33,40 @@ const SubjectRequests = () => {
   const [error, setError] = useState('');
   const [teachers, setTeachers] = useState<TeacherType[]>([]);
   const [selectedTeachers, setSelectedTeachers] = useState<{[key: string]: string}>({});
-  
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        
-        // Fetch pending subject requests
-        const requestsRes = await api.get('/requests/subject/pending');
-        setRequests(requestsRes.data);
-        
-        // Fetch all teachers for assignment
-        const teachersRes = await api.get('/teacher/details');
-        setTeachers(teachersRes.data);
-        
-        // Initialize selected teachers
-        const initialTeachers: {[key: string]: string} = {};
-        requestsRes.data.forEach((request: SubjectRequestType) => {
-          initialTeachers[request._id] = '';
-        });
-        setSelectedTeachers(initialTeachers);
-        
-        setLoading(false);
-      } catch (err) {
-        console.error('Error fetching data:', err);
-        setError('No requests at the moment!');
-        setLoading(false);
-      }
-    };
-    
-    fetchData();
-  }, []);
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch pending subject requests
+      const requestsRes = await api.get('/requests/subject/pending');
+      setRequests(requestsRes.data);
+      
+      // Fetch all teachers
+      const teachersRes = await api.get('/teacher/details');
+      setTeachers(teachersRes.data);
+      
+      // Initialize selected teachers state
+      const initialTeachers: {[key: string]: string} = {};
+      requestsRes.data.forEach((request: SubjectRequestType) => {
+        initialTeachers[request._id] = '';
+      });
+      setSelectedTeachers(initialTeachers);
+      
+      setLoading(false);
+    } catch (err) {
+      console.error('Error fetching data:', err);
+      setError('Failed to load requests. Please try again.');
+      setLoading(false);
+    }
+  };
+
+  fetchData();
+  const pollInterval = setInterval(fetchData, 30000); // Refresh every 30 seconds
+
+  return () => clearInterval(pollInterval);
+}, []);
   
   const handleTeacherSelection = (requestId: string, teacherId: string) => {
     setSelectedTeachers({
@@ -72,38 +75,53 @@ const SubjectRequests = () => {
     });
   };
   
+
   const handleApproveRequest = async (requestId: string) => {
-    try {
-      const teacherId = selectedTeachers[requestId];
-      if (!teacherId) {
-        alert('Please select a teacher before approving the request');
-        return;
-      }
-      
-      await api.post('/requests/subject/approve', {
-        requestId,
-        teacherId
-      });
-      
-      // Remove the approved request from the list
-      setRequests(requests.filter(request => request._id !== requestId));
-      
-    } catch (error: any) {
-      console.error('Error approving request:', error);
-      alert(`Failed to approve request: ${error.response?.data?.message || error.message}`);
+  try {
+    const teacherId = selectedTeachers[requestId];
+    if (!teacherId) {
+      alert('Please select a teacher before approving');
+      return;
     }
-  };
-  
+
+    // Make API call to approve
+    await api.post('/requests/subject/approve', {
+      requestId,
+      teacherId
+    });
+
+    // Optimistic UI update
+    setRequests(prev => prev.filter(request => request._id !== requestId));
+    
+    alert('Subject approved and teacher assigned!');
+    
+  } catch (error: any) {
+    console.error('Approval error:', error);
+    alert(`Failed to approve: ${error.response?.data?.message || error.message}`);
+    // Rollback UI if needed
+    const originalRequests = await api.get('/requests/subject/pending');
+    setRequests(originalRequests.data);
+  }
+};
+
   const handleRejectRequest = async (requestId: string) => {
-    try {
-      // Implement reject logic here
-      // For now, just remove from UI
-      setRequests(requests.filter(request => request._id !== requestId));
-    } catch (error: any) {
-      console.error('Error rejecting request:', error);
-      alert(`Failed to reject request: ${error.message}`);
-    }
-  };
+  try {
+    // Make API call to reject
+    await api.delete(`/requests/subject/${requestId}`);
+
+    // Optimistic UI update
+    setRequests(prev => prev.filter(request => request._id !== requestId));
+    
+    alert('Request rejected successfully');
+    
+  } catch (error: any) {
+    console.error('Rejection error:', error);
+    alert(`Failed to reject: ${error.response?.data?.message || error.message}`);
+    // Rollback UI if needed
+    const originalRequests = await api.get('/requests/subject/pending');
+    setRequests(originalRequests.data);
+  }
+};
   
   const filteredRequests = requests.filter(request => {
     const matchesSearch = 
@@ -114,7 +132,7 @@ const SubjectRequests = () => {
     return matchesSearch && matchesSubject;
   });
   
-  const subjects = ['all', ...new Set(requests.map(request => request.subject))];
+  const subjects = ['all', ...Array.from(new Set(requests.map(request => request.subject)))];
   
   return (
     <div className="flex">
@@ -150,7 +168,7 @@ const SubjectRequests = () => {
                   className="border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-navbar"
                 >
                   <option value="all">All Subjects</option>
-                  {subjects.slice(1).map((subject) => (
+                  {subjects.filter(subject => subject !== 'all').map((subject) => (
                     <option key={subject} value={subject}>{subject}</option>
                   ))}
                 </select>
@@ -239,7 +257,7 @@ const SubjectRequests = () => {
                           >
                             <option value="">Select a teacher</option>
                             {teachers.filter(teacher => 
-                              teacher.expertise.toLowerCase().includes(request.subject.toLowerCase())
+                              teacher.expertise.toLowerCase() === request.subject.toLowerCase()
                             ).map((teacher) => (
                               <option key={teacher._id} value={teacher._id}>
                                 {teacher.name} ({teacher.experience} yrs exp)
@@ -249,16 +267,21 @@ const SubjectRequests = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex gap-2">
-                            <button
-                              onClick={() => handleApproveRequest(request._id)}
-                              className="p-1 bg-green-100 text-green-600 rounded hover:bg-green-200"
-                              title="Approve"
-                            >
-                              <Check size={18} />
-                            </button>
+                          <button
+                            onClick={() => handleApproveRequest(request._id)}
+                            className={`p-1 ${
+                              selectedTeachers[request._id] 
+                                ? 'bg-green-100 text-green-600 hover:bg-green-200' 
+                                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            } rounded`}
+                            title="Approve"
+                            disabled={!selectedTeachers[request._id]}
+                          >
+                            <Check size={18} />
+                          </button>
                             <button
                               onClick={() => handleRejectRequest(request._id)}
-                              className="p-1 bg-red-100 text-red-600 rounded hover:bg-red-200"
+                              className="p-1 bg-red-100 text-red-600 rounded hover:bg-red-200 disabled:bg-gray-100 disabled:text-gray-400"
                               title="Reject"
                             >
                               <X size={18} />

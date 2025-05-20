@@ -5,19 +5,6 @@ const ScheduledClass = require('../models/ScheduledClass');
 const ClassRequest = require('../models/ClassRequest');
 const StudentDetails = require('../models/StudentDetails');
 
-// exports.completeClass = async (req, res) => {
-//   try {
-//     const updatedClass = await ScheduledClass.findByIdAndUpdate(
-//       req.params.classId,
-//       { status: 'completed' },
-//       { new: true }
-//     );
-//     res.json({ success: true, data: updatedClass });
-//   } catch (error) {
-//     res.status(500).json({ success: false, message: error.message });
-//   }
-// };
-
 exports.completeClass = async (req, res) => {
   try {
     const { classId } = req.params;

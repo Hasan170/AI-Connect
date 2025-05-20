@@ -4,6 +4,7 @@ const TeacherRequest = require('../models/TeacherRequest');
 const TeacherDetails = require('../models/TeacherDetails');
 const StudentDetails = require('../models/StudentDetails');
 const ClassRequest = require('../models/ClassRequest');
+const SubjectRequest = require('../models/SubjectRequest');
 
 // Handle student class requests
 const createStudentRequest = async (req, res) => {
@@ -190,5 +191,100 @@ const getStudentClassRequests = async (req, res) => {
   }
 };
 
+// Submit new subject request
+const createSubjectRequest = async (req, res) => {
+  try {
+    const { studentId, subject, reason } = req.body;
+
+    // Check if student exists
+    const student = await StudentDetails.findById(studentId);
+    if (!student) {
+      return res.status(404).json({ message: 'Student not found' });
+    }
+
+    // Check for existing pending request for same subject
+    const existingRequest = await SubjectRequest.findOne({
+      studentId,
+      subject,
+      status: 'pending'
+    });
+
+    if (existingRequest) {
+      return res.status(400).json({ 
+        message: 'Pending request already exists for this subject' 
+      });
+    }
+
+    // Create new request
+    const newRequest = await SubjectRequest.create({
+      studentId,
+      subject,
+      reason
+    });
+
+    res.status(201).json(newRequest);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Approve subject request
+const approveSubjectRequest = async (req, res) => {
+  try {
+    const { requestId, teacherId } = req.body;
+
+    // Find and validate request
+    const request = await SubjectRequest.findById(requestId)
+      .populate('studentId');
+    
+    if (!request) return res.status(404).json({ message: 'Request not found' });
+
+    // Update student's subjects
+    await StudentDetails.findByIdAndUpdate(
+      request.studentId._id,
+      { $addToSet: { 
+        subjects: { 
+          subject: request.subject,
+          teacherId: teacherId 
+        } 
+      }},
+      { new: true }
+    );
+
+    // Update request status
+    request.status = 'approved';
+    request.assignedTeacher = teacherId;
+    await request.save();
+
+    res.json({ message: 'Subject added successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const getPendingSubjectRequests = async (req, res) => {
+  try {
+    const requests = await SubjectRequest.find({ status: 'pending' })
+      .populate({
+        path: 'studentId',
+        select: 'name email grade board',
+        model: 'studentdetail' // Explicitly specify the model
+      })
+      .sort({ createdAt: -1 });
+
+    console.log('Fetched requests:', requests); // Add logging
+    res.status(200).json(requests);
+  } catch (error) {
+    console.error('Error in getPendingSubjectRequests:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Failed to fetch requests',
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  }
+};
+
 module.exports = {createStudentRequest,createTeacherRequest,getPendingRequests, 
-  createClassRequest, getPendingClassRequests, getStudentClassRequests};
+  createClassRequest, getPendingClassRequests, getStudentClassRequests, createSubjectRequest, 
+  approveSubjectRequest, getPendingSubjectRequests};

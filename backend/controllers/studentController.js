@@ -143,4 +143,39 @@ const createStudent = async (req, res) => {
   }
 };
 
-module.exports = { loginStudent, getStudentDetails, findStudentByEmail, createStudent };
+// Approve subject request
+const approveSubjectRequest = async (req, res) => {
+  try {
+    const { requestId, teacherId } = req.body;
+
+    // Find and validate request
+    const request = await SubjectRequest.findById(requestId)
+      .populate('studentId');
+    
+    if (!request) return res.status(404).json({ message: 'Request not found' });
+
+    // Update student's subjects
+    await StudentDetails.findByIdAndUpdate(
+      request.studentId._id,
+      { $addToSet: { 
+        subjects: { 
+          subject: request.subject,
+          teacherId: teacherId 
+        } 
+      }},
+      { new: true }
+    );
+
+    // Update request status
+    request.status = 'approved';
+    request.assignedTeacher = teacherId;
+    await request.save();
+
+    res.json({ message: 'Subject added successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
+module.exports = { loginStudent, getStudentDetails, findStudentByEmail, createStudent, approveSubjectRequest };
