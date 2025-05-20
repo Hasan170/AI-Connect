@@ -1036,18 +1036,18 @@ const MyCourses: React.FC = () => {
                     <BookOpen size={16} className="mr-1" />
                     {course.subject}
                   </span>
-                  <span className="flex items-center">
+                  {/* <span className="flex items-center">
                     <Users size={16} className="mr-1" />
                     {course.studentsEnrolled.toLocaleString()} students
-                  </span>
-                  <span className="flex items-center">
+                  </span> */}
+                  {/* <span className="flex items-center">
                     <Star size={16} className="mr-1 text-yellow-500 fill-current" />
                     {course.rating.toFixed(1)}
-                  </span>
+                  </span> */}
                 </div>
-                <p className="text-gray-700 mb-4">
+                {/* <p className="text-gray-700 mb-4">
                   Instructor: <span className="font-medium">{course.instructor}</span>
-                </p>
+                </p> */}
                 <div className="flex items-center gap-4">
                   <div className="bg-gray-100 px-3 py-1 rounded-full text-sm">
                     {course.totalHours} hours
@@ -1058,7 +1058,7 @@ const MyCourses: React.FC = () => {
                 </div>
               </div>
 
-              <div className="md:w-1/3">
+              {/* <div className="md:w-1/3">
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <h3 className="text-lg font-medium text-text-primary mb-2">Your Progress</h3>
                   <div className="w-full bg-gray-200 rounded-full h-4 mb-2">
@@ -1072,7 +1072,7 @@ const MyCourses: React.FC = () => {
                     <span>{course.completedModules}/{course.totalModules} modules</span>
                   </div>
                 </div>
-              </div>
+              </div> */}
             </div>
           </div>
 

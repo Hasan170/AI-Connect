@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { CreditCard, FileText, Download, ChevronRight, X, AlertCircle } from 'lucide-react';
 import StudentSidebar from '../../components/StudentSidebar';
+import api from '../../api';
 
 // Updated Rupee icon component with simpler, cleaner design
 const RupeeIcon = ({ size = 24, className = "" }) => (
@@ -33,6 +34,8 @@ interface Payment {
 interface FeeBalance {
   totalDue: number;
   currency: string;
+  unpaidClassIds: string[];
+  unpaidClassCount: number;
 }
 
 declare global {
@@ -42,13 +45,16 @@ declare global {
 }
 
 const FeeDetails = () => {
-  const [balance] = useState<FeeBalance>({
-    totalDue: 500, // Set a test amount for the Razorpay demo
-    currency: 'INR'
+  const [balance, setBalance] = useState<FeeBalance>({
+    totalDue: 0,
+    currency: 'INR',
+    unpaidClassIds: [],
+    unpaidClassCount: 0
   });
 
-  const [payments] = useState<Payment[]>([]);
+  const [payments, setPayments] = useState<Payment[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [paymentHistory, setPaymentHistory] = useState<Payment[]>([]);
 
   // Load Razorpay script on component mount
   useEffect(() => {
@@ -57,10 +63,65 @@ const FeeDetails = () => {
     script.async = true;
     document.body.appendChild(script);
     
+    fetchUnpaidFees();
+    fetchPaymentHistory();
+    
     return () => {
       document.body.removeChild(script);
     };
   }, []);
+
+    const fetchUnpaidFees = async () => {
+    try {
+      const email = localStorage.getItem('studentEmail');
+      if (!email) {
+        console.error('Student email not found in localStorage');
+        return;
+      }
+      
+      // First get student details to get ID
+      const studentRes = await api.get(`/student/details/${email}`);
+      console.log('Student details fetched:', studentRes.data);
+      const studentId = studentRes.data._id;
+      
+      if (!studentId) {
+        console.error('No student ID found in the response');
+        return;
+      }
+      
+      // Then get unpaid fees
+      console.log('Fetching unpaid fees for studentId:', studentId);
+      const feesRes = await api.get(`/classes/fees/unpaid/${studentId}`);
+      console.log('Unpaid fees response:', feesRes.data);
+      
+      // Check if response has the expected structure
+      if (!feesRes.data || !feesRes.data.data) {
+        console.error('Invalid response structure:', feesRes.data);
+        return;
+      }
+      
+      setBalance({
+        totalDue: feesRes.data.data.totalDue || 0,
+        currency: 'INR',
+        unpaidClassIds: feesRes.data.data.unpaidClassIds || [],
+        unpaidClassCount: feesRes.data.data.unpaidClassCount || 0
+      });
+      
+      // Log the updated state for debugging
+      console.log('Updated balance state:', {
+        totalDue: feesRes.data.data.totalDue || 0,
+        unpaidClassCount: feesRes.data.data.unpaidClassCount || 0
+      });
+    } catch (error) {
+      console.error('Error fetching unpaid fees:', error);
+    }
+    };
+  
+  const fetchPaymentHistory = async () => {
+    // You'll need to implement an API endpoint for payment history
+    // For now, we'll just set an empty array
+    setPaymentHistory([]);
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -91,15 +152,30 @@ const FeeDetails = () => {
       amount: balance.totalDue * 100, // Razorpay expects amount in paise
       currency: balance.currency,
       name: 'AI-Connect',
-      description: 'Tuition Fee Payment',
+      description: `Payment for ${balance.unpaidClassCount} classes`,
       image: 'https://your-logo-url.com/logo.png', // Replace with your logo URL
-      handler: function(response: any) {
+      handler: async function(response: any) {
         // This function runs after successful payment
         console.log('Payment successful:', response);
-        alert('Payment successful! Payment ID: ' + response.razorpay_payment_id);
         
-        // Here you would typically call your backend API to verify and record the payment
-        // For now, we're just logging to console
+        try {
+          // Mark classes as paid in the database
+          await api.post('/classes/fees/pay', {
+            classIds: balance.unpaidClassIds,
+            paymentId: response.razorpay_payment_id
+          });
+          
+          // Refresh data
+          fetchUnpaidFees();
+          fetchPaymentHistory();
+          
+          alert('Payment successful! Payment ID: ' + response.razorpay_payment_id);
+        } catch (error) {
+          console.error('Error updating payment status:', error);
+          alert('Payment recorded but failed to update status. Please contact support.');
+        }
+        
+        setIsLoading(false);
       },
       prefill: {
         name: 'Student Name', // In real implementation, get from student profile
@@ -144,10 +220,14 @@ const FeeDetails = () => {
                 <div>
                   <p className="text-text-secondary mb-2">Payment Due</p>
                   <p className="text-3xl font-bold text-text-primary">{formatCurrency(balance.totalDue)}</p>
+                  {balance.unpaidClassCount > 0 && (
+                    <p className="text-sm text-text-secondary mt-1">
+                      For {balance.unpaidClassCount} completed {balance.unpaidClassCount === 1 ? 'class' : 'classes'} (₹500 per class)
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
-
             <div className="bg-white p-6 rounded-lg shadow-md transform hover:scale-[1.02] transition-all duration-300">
               <button
                 onClick={handlePayNow}
@@ -173,19 +253,57 @@ const FeeDetails = () => {
             </div>
           </div>
 
-          {/* Payment History - Empty State */}
+          {/* Payment History - Empty State or Actual History */}
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
             <div className="p-6 border-b">
               <h2 className="text-xl font-semibold text-text-primary">Payment History</h2>
             </div>
             
-            <div className="p-12 flex flex-col items-center justify-center">
-              <AlertCircle size={48} className="text-gray-300 mb-4" />
-              <h3 className="text-lg font-medium text-gray-500 mb-2">No Payment History</h3>
-              <p className="text-gray-400 text-center max-w-md">
-                You don't have any payment records yet. Your payment history will appear here once you make your first payment.
-              </p>
-            </div>
+            {paymentHistory.length === 0 ? (
+              <div className="p-12 flex flex-col items-center justify-center">
+                <AlertCircle size={48} className="text-gray-300 mb-4" />
+                <h3 className="text-lg font-medium text-gray-500 mb-2">No Payment History</h3>
+                <p className="text-gray-400 text-center max-w-md">
+                  You don't have any payment records yet. Your payment history will appear here once you make your first payment.
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Invoice</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {paymentHistory.map(payment => (
+                      <tr key={payment.id}>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{payment.date}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{formatCurrency(payment.amount)}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 capitalize">{payment.type}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(payment.status)}`}>
+                            {payment.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {payment.invoice && (
+                            <button className="text-blue-600 hover:text-blue-800 flex items-center">
+                              <Download size={16} className="mr-1" />
+                              Download
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </div>
       </div>
