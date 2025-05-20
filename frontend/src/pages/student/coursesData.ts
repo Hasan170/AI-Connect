@@ -1,7 +1,7 @@
 export interface Lecture {
   id: string;
   title: string;
-  type: 'video' | 'reading' | 'quiz' | 'assignment';
+  type: 'video' | 'reading' |'assessment';
   duration: string;
   completed: boolean;
   url?: string;
@@ -102,14 +102,14 @@ export const coursesData: Record<string, Course> = {
             duration: '30m',
             completed: true,
             url: 'https://www.youtube.com/embed/dAgfnK528RA'
-          },
-          {
-            id: 'l6',
-            title: 'Module 1 Assessment',
-            type: 'quiz',
-            duration: '40m',
-            completed: true
           }
+          // {
+          //   id: 'l6',
+          //   title: 'Module 1 Assessment',
+          //   type: 'quiz',
+          //   duration: '40m',
+          //   completed: true
+          // }
         ]
       },
       {
@@ -157,14 +157,14 @@ export const coursesData: Record<string, Course> = {
             duration: '35m',
             completed: false,
             url: 'https://www.youtube.com/embed/kwh4SD1ToFc'
-          },
-          {
-            id: 'l12',
-            title: 'Practice with Fractions and Decimals',
-            type: 'assignment',
-            duration: '50m',
-            completed: false
           }
+          // {
+          //   id: 'l12',
+          //   title: 'Practice with Fractions and Decimals',
+          //   type: 'assignment',
+          //   duration: '50m',
+          //   completed: false
+          // }
         ]
       },
       {
@@ -216,7 +216,7 @@ export const coursesData: Record<string, Course> = {
           {
             id: 'l18',
             title: 'Final Course Assessment',
-            type: 'quiz',
+            type: 'assessment',
             duration: '45m',
             completed: false
           }
@@ -285,14 +285,14 @@ export const coursesData: Record<string, Course> = {
             duration: '35m',
             completed: true,
             url: 'https://www.youtube.com/embed/NLX_1mz1gLY'
-          },
-          {
-            id: 'l6',
-            title: 'Expressions Practice Assignment',
-            type: 'assignment',
-            duration: '50m',
-            completed: true
           }
+          // {
+          //   id: 'l6',
+          //   title: 'Expressions Practice Assignment',
+          //   type: 'assignment',
+          //   duration: '50m',
+          //   completed: true
+          // }
         ]
       },
       {
@@ -340,14 +340,14 @@ export const coursesData: Record<string, Course> = {
             duration: '40m',
             completed: false,
             url: 'https://www.youtube.com/embed/7Jspa2IuEXs'
-          },
-          {
-            id: 'l12',
-            title: 'Module 2 Assessment',
-            type: 'quiz',
-            duration: '45m',
-            completed: false
           }
+          // {
+          //   id: 'l12',
+          //   title: 'Module 2 Assessment',
+          //   type: 'quiz',
+          //   duration: '45m',
+          //   completed: false
+          // }
         ]
       },
       {
@@ -398,9 +398,9 @@ export const coursesData: Record<string, Course> = {
           },
           {
             id: 'l18',
-            title: 'Final Functions Project',
-            type: 'assignment',
-            duration: '55m',
+            title: 'Final Course Assessment',
+            type: 'assessment',
+            duration: '45m',
             completed: false
           }
         ]
@@ -466,14 +466,14 @@ export const coursesData: Record<string, Course> = {
             duration: '45m',
             completed: false,
             url: 'https://www.youtube.com/embed/xMgpCeHHN2E'
-          },
-          {
-            id: 'l6',
-            title: 'Module 1 Quiz',
-            type: 'quiz',
-            duration: '35m',
-            completed: false
           }
+          // {
+          //   id: 'l6',
+          //   title: 'Module 1 Quiz',
+          //   type: 'quiz',
+          //   duration: '35m',
+          //   completed: false
+          // }
         ]
       },
       {
@@ -521,14 +521,14 @@ export const coursesData: Record<string, Course> = {
             duration: '45m',
             completed: false,
             url: 'https://www.youtube.com/embed/_KF42dLgKmo'
-          },
-          {
-            id: 'l12',
-            title: 'Polygon Practice',
-            type: 'assignment',
-            duration: '50m',
-            completed: false
           }
+          // {
+          //   id: 'l12',
+          //   title: 'Polygon Practice',
+          //   type: 'assignment',
+          //   duration: '50m',
+          //   completed: false
+          // }
         ]
       },
       {
@@ -579,9 +579,9 @@ export const coursesData: Record<string, Course> = {
           },
           {
             id: 'l18',
-            title: 'Final Assessment',
-            type: 'quiz',
-            duration: '40m',
+            title: 'Final Course Assessment',
+            type: 'assessment',
+            duration: '45m',
             completed: false
           }
         ]
@@ -654,14 +654,14 @@ export const coursesData: Record<string, Course> = {
           type: 'reading',
           duration: '50m',
           completed: true
-        },
-        {
-          id: 'l6',
-          title: 'Quadratic Equations Practice',
-          type: 'assignment',
-          duration: '1h',
-          completed: true
         }
+        // {
+        //   id: 'l6',
+        //   title: 'Quadratic Equations Practice',
+        //   type: 'assignment',
+        //   duration: '1h',
+        //   completed: true
+        // }
       ]
     },
     {
@@ -717,14 +717,14 @@ export const coursesData: Record<string, Course> = {
           duration: '40m',
           completed: false,
           url: 'https://www.youtube.com/embed/2JbqzjOzWQQ'
-        },
-        {
-          id: 'l13',
-          title: 'Systems of Equations Quiz',
-          type: 'quiz',
-          duration: '45m',
-          completed: false
         }
+        // {
+        //   id: 'l13',
+        //   title: 'Systems of Equations Quiz',
+        //   type: 'quiz',
+        //   duration: '45m',
+        //   completed: false
+        // }
       ]
     },
     {
@@ -775,9 +775,9 @@ export const coursesData: Record<string, Course> = {
         },
         {
           id: 'l19',
-          title: 'Final Polynomials Project',
-          type: 'assignment',
-          duration: '55m',
+          title: 'Final Course Assessment',
+          type: 'assessment',
+          duration: '45m',
           completed: false
         }
       ]
@@ -845,14 +845,14 @@ export const coursesData: Record<string, Course> = {
           duration: '35m',
           completed: true,
           url: 'https://www.youtube.com/embed/nUFWA_XRFqg'
-        },
-        {
-          id: 'l6',
-          title: 'Number Theory Practice Problems',
-          type: 'assignment',
-          duration: '1h',
-          completed: true
         }
+        // {
+        //   id: 'l6',
+        //   title: 'Number Theory Practice Problems',
+        //   type: 'assignment',
+        //   duration: '1h',
+        //   completed: true
+        // }
       ]
     },
     {
@@ -900,21 +900,21 @@ export const coursesData: Record<string, Course> = {
           duration: '50m',
           completed: false,
           url: 'https://www.youtube.com/embed/8TS9xRh0V-Y'
-        },
-        {
-          id: 'l12',
-          title: 'Ratio and Proportion Quiz',
-          type: 'quiz',
-          duration: '45m',
-          completed: false
-        },
-        {
-          id: 'l13',
-          title: 'Applied Proportion Problems',
-          type: 'assignment',
-          duration: '55m',
-          completed: false
         }
+        // {
+        //   id: 'l12',
+        //   title: 'Ratio and Proportion Quiz',
+        //   type: 'quiz',
+        //   duration: '45m',
+        //   completed: false
+        // },
+        // {
+        //   id: 'l13',
+        //   title: 'Applied Proportion Problems',
+        //   type: 'assignment',
+        //   duration: '55m',
+        //   completed: false
+        // }
       ]
     },
     {
@@ -965,9 +965,9 @@ export const coursesData: Record<string, Course> = {
         },
         {
           id: 'l19',
-          title: 'Final Applied Mathematics Project',
-          type: 'assignment',
-          duration: '1h',
+          title: 'Final Course Assessment',
+          type: 'assessment',
+          duration: '45m',
           completed: false
         }
       ]
@@ -1035,21 +1035,21 @@ export const coursesData: Record<string, Course> = {
           duration: '45m',
           completed: true,
           url: 'https://www.youtube.com/embed/Qrm6x1Ko8JQ'
-        },
-        {
-          id: 'l6',
-          title: 'Coordinate Geometry Quiz',
-          type: 'quiz',
-          duration: '40m',
-          completed: true
-        },
-        {
-          id: 'l7',
-          title: 'Analytical Geometry Problems',
-          type: 'assignment',
-          duration: '55m',
-          completed: true
         }
+        // {
+        //   id: 'l6',
+        //   title: 'Coordinate Geometry Quiz',
+        //   type: 'quiz',
+        //   duration: '40m',
+        //   completed: true
+        // },
+        // {
+        //   id: 'l7',
+        //   title: 'Analytical Geometry Problems',
+        //   type: 'assignment',
+        //   duration: '55m',
+        //   completed: true
+        // }
       ]
     },
     {
@@ -1097,14 +1097,14 @@ export const coursesData: Record<string, Course> = {
           duration: '45m',
           completed: false,
           url: 'https://www.youtube.com/embed/U-9jn_SC9XI'
-        },
-        {
-          id: 'l13',
-          title: 'Transformation Applications',
-          type: 'assignment',
-          duration: '1h',
-          completed: false
         }
+        // {
+        //   id: 'l13',
+        //   title: 'Transformation Applications',
+        //   type: 'assignment',
+        //   duration: '1h',
+        //   completed: false
+        // }
       ]
     },
     {
@@ -1155,9 +1155,9 @@ export const coursesData: Record<string, Course> = {
         },
         {
           id: 'l19',
-          title: 'Final Geometry Proof Portfolio',
-          type: 'assignment',
-          duration: '1h 10m',
+          title: 'Final Course Assessment',
+          type: 'assessment',
+          duration: '45m',
           completed: false
         }
       ]
@@ -1237,14 +1237,14 @@ export const coursesData: Record<string, Course> = {
           duration: '55m',
           completed: false,
           url: 'https://www.youtube.com/embed/tTV2vDGjlfQ'
-        },
-        {
-          id: 'l7',
-          title: 'Module 1 Assessment',
-          type: 'quiz',
-          duration: '45m',
-          completed: false
         }
+        // {
+        //   id: 'l7',
+        //   title: 'Module 1 Assessment',
+        //   type: 'quiz',
+        //   duration: '45m',
+        //   completed: false
+        // }
       ]
     },
     {
@@ -1292,14 +1292,14 @@ export const coursesData: Record<string, Course> = {
           duration: '50m',
           completed: false,
           url: 'https://www.youtube.com/embed/DMtFhACPnTY'
-        },
-        {
-          id: 'l13',
-          title: 'Cryptography Implementation Project',
-          type: 'assignment',
-          duration: '1h 30m',
-          completed: false
         }
+        // {
+        //   id: 'l13',
+        //   title: 'Cryptography Implementation Project',
+        //   type: 'assignment',
+        //   duration: '1h 30m',
+        //   completed: false
+        // }
       ]
     },
     {
@@ -1348,18 +1348,18 @@ export const coursesData: Record<string, Course> = {
           completed: false,
           url: 'https://www.youtube.com/embed/QH1WfCwdLQU'
         },
-        {
-          id: 'l19',
-          title: 'Number Theory Research Project',
-          type: 'assignment',
-          duration: '2h',
-          completed: false
-        },
+        // {
+        //   id: 'l19',
+        //   title: 'Number Theory Research Project',
+        //   type: 'assignment',
+        //   duration: '2h',
+        //   completed: false
+        // },
         {
           id: 'l20',
-          title: 'Final Comprehensive Assessment',
-          type: 'quiz',
-          duration: '1h',
+          title: 'Final Course Assessment',
+          type: 'assessment',
+          duration: '45m',
           completed: false
         }
       ]
@@ -1442,14 +1442,14 @@ export const coursesData: Record<string, Course> = {
           type: 'reading',
           duration: '1h',
           completed: false
-        },
-        {
-          id: 'l8',
-          title: 'Group Theory Assessment',
-          type: 'quiz',
-          duration: '45m',
-          completed: false
         }
+        // {
+        //   id: 'l8',
+        //   title: 'Group Theory Assessment',
+        //   type: 'quiz',
+        //   duration: '45m',
+        //   completed: false
+        // }
       ]
     },
     {
@@ -1505,14 +1505,14 @@ export const coursesData: Record<string, Course> = {
           duration: '55m',
           completed: false,
           url: 'https://www.youtube.com/embed/D_89mIoWKnk'
-        },
-        {
-          id: 'l15',
-          title: 'Ring Theory Problems',
-          type: 'assignment',
-          duration: '1h 30m',
-          completed: false
         }
+        // {
+        //   id: 'l15',
+        //   title: 'Ring Theory Problems',
+        //   type: 'assignment',
+        //   duration: '1h 30m',
+        //   completed: false
+        // }
       ]
     },
     {
@@ -1576,18 +1576,18 @@ export const coursesData: Record<string, Course> = {
           duration: '45m',
           completed: false
         },
-        {
-          id: 'l23',
-          title: 'Final Research Project',
-          type: 'assignment',
-          duration: '2h',
-          completed: false
-        },
+        // {
+        //   id: 'l23',
+        //   title: 'Final Research Project',
+        //   type: 'assignment',
+        //   duration: '2h',
+        //   completed: false
+        // },
         {
           id: 'l24',
-          title: 'Comprehensive Final Exam',
-          type: 'quiz',
-          duration: '1h',
+          title: 'Final Course Assessment',
+          type: 'assessment',
+          duration: '45m',
           completed: false
         }
       ]
@@ -1663,14 +1663,14 @@ export const coursesData: Record<string, Course> = {
           duration: '50m',
           completed: false,
           url: 'https://www.youtube.com/embed/TwA1EgEXn0U'
-        },
-        {
-          id: 'l7',
-          title: 'Differential Geometry Problems',
-          type: 'assignment',
-          duration: '1h 15m',
-          completed: false
         }
+        // {
+        //   id: 'l7',
+        //   title: 'Differential Geometry Problems',
+        //   type: 'assignment',
+        //   duration: '1h 15m',
+        //   completed: false
+        // }
       ]
     },
     {
@@ -1726,14 +1726,14 @@ export const coursesData: Record<string, Course> = {
           duration: '55m',
           completed: false,
           url: 'https://www.youtube.com/embed/_10KuMU_ouo'
-        },
-        {
-          id: 'l14',
-          title: 'Non-Euclidean Geometry Assessment',
-          type: 'quiz',
-          duration: '45m',
-          completed: false
         }
+        // {
+        //   id: 'l14',
+        //   title: 'Non-Euclidean Geometry Assessment',
+        //   type: 'quiz',
+        //   duration: '45m',
+        //   completed: false
+        // }
       ]
     },
     {
@@ -1790,18 +1790,18 @@ export const coursesData: Record<string, Course> = {
           completed: false,
           url: 'https://www.youtube.com/embed/1UMwJjVZiHM'
         },
-        {
-          id: 'l21',
-          title: 'Final Geometric Analysis Project',
-          type: 'assignment',
-          duration: '1h 30m',
-          completed: false
-        },
+        // {
+        //   id: 'l21',
+        //   title: 'Final Geometric Analysis Project',
+        //   type: 'assignment',
+        //   duration: '1h 30m',
+        //   completed: false
+        // },
         {
           id: 'l22',
-          title: 'Comprehensive Final Examination',
-          type: 'quiz',
-          duration: '1h',
+          title: 'Final Course Assessment',
+          type: 'assessment',
+          duration: '45m',
           completed: false
         }
       ]
@@ -1875,14 +1875,14 @@ export const coursesData: Record<string, Course> = {
           duration: '40m',
           completed: false,
           url: 'https://www.youtube.com/embed/bB7Nyfe2XnA'
-        },
-        {
-          id: 'l6',
-          title: 'Kinematics Practice Problems',
-          type: 'assignment',
-          duration: '1h',
-          completed: false
         }
+        // {
+        //   id: 'l6',
+        //   title: 'Kinematics Practice Problems',
+        //   type: 'assignment',
+        //   duration: '1h',
+        //   completed: false
+        // }
       ]
     },
     {
@@ -1930,14 +1930,14 @@ export const coursesData: Record<string, Course> = {
           duration: '40m',
           completed: false,
           url: 'https://www.youtube.com/embed/fo_pmp5rtzo'
-        },
-        {
-          id: 'l12',
-          title: 'Newton\'s Laws Assessment',
-          type: 'quiz',
-          duration: '45m',
-          completed: false
         }
+        // {
+        //   id: 'l12',
+        //   title: 'Newton\'s Laws Assessment',
+        //   type: 'quiz',
+        //   duration: '45m',
+        //   completed: false
+        // }
       ]
     },
     {
@@ -1988,8 +1988,8 @@ export const coursesData: Record<string, Course> = {
         },
         {
           id: 'l18',
-          title: 'Final Physics Assessment',
-          type: 'quiz',
+          title: 'Final Course Assessment',
+          type: 'assessment',
           duration: '45m',
           completed: false
         }
@@ -2058,14 +2058,14 @@ export const coursesData: Record<string, Course> = {
           duration: '35m',
           completed: false,
           url: 'https://www.youtube.com/embed/JyX9_LQvPjw'
-        },
-        {
-          id: 'l6',
-          title: 'Electrostatics Problems',
-          type: 'assignment',
-          duration: '45m',
-          completed: false
         }
+        // {
+        //   id: 'l6',
+        //   title: 'Electrostatics Problems',
+        //   type: 'assignment',
+        //   duration: '45m',
+        //   completed: false
+        // }
       ]
     },
     {
@@ -2113,14 +2113,14 @@ export const coursesData: Record<string, Course> = {
           duration: '45m',
           completed: false,
           url: 'https://www.youtube.com/embed/RGvvbzPJB5k'
-        },
-        {
-          id: 'l12',
-          title: 'Circuit Analysis Quiz',
-          type: 'quiz',
-          duration: '40m',
-          completed: false
         }
+        // {
+        //   id: 'l12',
+        //   title: 'Circuit Analysis Quiz',
+        //   type: 'quiz',
+        //   duration: '40m',
+        //   completed: false
+        // }
       ]
     },
     {
@@ -2171,9 +2171,9 @@ export const coursesData: Record<string, Course> = {
         },
         {
           id: 'l18',
-          title: 'Final Electromagnetism Project',
-          type: 'assignment',
-          duration: '50m',
+          title: 'Final Course Assessment',
+          type: 'assessment',
+          duration: '45m',
           completed: false
         }
       ]
@@ -2241,14 +2241,14 @@ export const coursesData: Record<string, Course> = {
           duration: '35m',
           completed: false,
           url: 'https://www.youtube.com/embed/7Y4YvGtTy-Y'
-        },
-        {
-          id: 'l6',
-          title: 'Temperature and Heat Quiz',
-          type: 'quiz',
-          duration: '30m',
-          completed: false
         }
+        // {
+        //   id: 'l6',
+        //   title: 'Temperature and Heat Quiz',
+        //   type: 'quiz',
+        //   duration: '30m',
+        //   completed: false
+        // }
       ]
     },
     {
@@ -2296,14 +2296,14 @@ export const coursesData: Record<string, Course> = {
           duration: '45m',
           completed: false,
           url: 'https://www.youtube.com/embed/QkRT8m42qcg'
-        },
-        {
-          id: 'l12',
-          title: 'Laws of Thermodynamics Assignment',
-          type: 'assignment',
-          duration: '1h',
-          completed: false
         }
+        // {
+        //   id: 'l12',
+        //   title: 'Laws of Thermodynamics Assignment',
+        //   type: 'assignment',
+        //   duration: '1h',
+        //   completed: false
+        // }
       ]
     },
     {
@@ -2354,9 +2354,9 @@ export const coursesData: Record<string, Course> = {
         },
         {
           id: 'l18',
-          title: 'Final Thermodynamics Assessment',
-          type: 'quiz',
-          duration: '40m',
+          title: 'Final Course Assessment',
+          type: 'assessment',
+          duration: '45m',
           completed: false
         }
       ]
@@ -2436,21 +2436,21 @@ export const coursesData: Record<string, Course> = {
           duration: '45m',
           completed: false,
           url: 'https://www.youtube.com/embed/gaBKm8orrlE'
-        },
-        {
-          id: 'l7',
-          title: 'Rotational Dynamics Problem Set',
-          type: 'assignment',
-          duration: '1h 15m',
-          completed: false
-        },
-        {
-          id: 'l8',
-          title: 'Module Assessment: Rotational Dynamics',
-          type: 'quiz',
-          duration: '45m',
-          completed: false
         }
+        // {
+        //   id: 'l7',
+        //   title: 'Rotational Dynamics Problem Set',
+        //   type: 'assignment',
+        //   duration: '1h 15m',
+        //   completed: false
+        // },
+        // {
+        //   id: 'l8',
+        //   title: 'Module Assessment: Rotational Dynamics',
+        //   type: 'quiz',
+        //   duration: '45m',
+        //   completed: false
+        // }
       ]
     },
     {
@@ -2506,14 +2506,14 @@ export const coursesData: Record<string, Course> = {
           duration: '50m',
           completed: false,
           url: 'https://www.youtube.com/embed/gA_H8dGO5v0'
-        },
-        {
-          id: 'l15',
-          title: 'Oscillations Laboratory Analysis',
-          type: 'assignment',
-          duration: '1h',
-          completed: false
         }
+        // {
+        //   id: 'l15',
+        //   title: 'Oscillations Laboratory Analysis',
+        //   type: 'assignment',
+        //   duration: '1h',
+        //   completed: false
+        // }
       ]
     },
     {
@@ -2570,18 +2570,18 @@ export const coursesData: Record<string, Course> = {
           completed: false,
           url: 'https://www.youtube.com/embed/UtQXMYPIDgk'
         },
-        {
-          id: 'l22',
-          title: 'Final Analytical Mechanics Project',
-          type: 'assignment',
-          duration: '1h 30m',
-          completed: false
-        },
+        // {
+        //   id: 'l22',
+        //   title: 'Final Analytical Mechanics Project',
+        //   type: 'assignment',
+        //   duration: '1h 30m',
+        //   completed: false
+        // },
         {
           id: 'l23',
-          title: 'Comprehensive Course Assessment',
-          type: 'quiz',
-          duration: '50m',
+          title: 'Final Course Assessment',
+          type: 'assessment',
+          duration: '45m',
           completed: false
         }
       ]
@@ -2657,14 +2657,14 @@ export const coursesData: Record<string, Course> = {
           duration: '45m',
           completed: false,
           url: 'https://www.youtube.com/embed/1C3UR5Bz8A8'
-        },
-        {
-          id: 'l7',
-          title: 'Boundary Value Problems',
-          type: 'assignment',
-          duration: '1h',
-          completed: false
         }
+        // {
+        //   id: 'l7',
+        //   title: 'Boundary Value Problems',
+        //   type: 'assignment',
+        //   duration: '1h',
+        //   completed: false
+        // }
       ]
     },
     {
@@ -2728,21 +2728,21 @@ export const coursesData: Record<string, Course> = {
           duration: '40m',
           completed: false,
           url: 'https://www.youtube.com/embed/FuK52Ti4wM8'
-        },
-        {
-          id: 'l15',
-          title: 'Maxwell\'s Equations Problem Set',
-          type: 'assignment',
-          duration: '1h 15m',
-          completed: false
-        },
-        {
-          id: 'l16',
-          title: 'Electromagnetic Waves Quiz',
-          type: 'quiz',
-          duration: '40m',
-          completed: false
         }
+        // {
+        //   id: 'l15',
+        //   title: 'Maxwell\'s Equations Problem Set',
+        //   type: 'assignment',
+        //   duration: '1h 15m',
+        //   completed: false
+        // },
+        // {
+        //   id: 'l16',
+        //   title: 'Electromagnetic Waves Quiz',
+        //   type: 'quiz',
+        //   duration: '40m',
+        //   completed: false
+        // }
       ]
     },
     {
@@ -2799,17 +2799,17 @@ export const coursesData: Record<string, Course> = {
           completed: false,
           url: 'https://www.youtube.com/embed/cHm8o6ZwvUk'
         },
-        {
-          id: 'l23',
-          title: 'AC Circuit Design Project',
-          type: 'assignment',
-          duration: '1h 15m',
-          completed: false
-        },
+        // {
+        //   id: 'l23',
+        //   title: 'AC Circuit Design Project',
+        //   type: 'assignment',
+        //   duration: '1h 15m',
+        //   completed: false
+        // },
         {
           id: 'l24',
           title: 'Final Course Assessment',
-          type: 'quiz',
+          type: 'assessment',
           duration: '45m',
           completed: false
         }
@@ -2886,14 +2886,14 @@ export const coursesData: Record<string, Course> = {
           duration: '45m',
           completed: false,
           url: 'https://www.youtube.com/embed/5L10vLOre_Y'
-        },
-        {
-          id: 'l7',
-          title: 'Thermodynamic Potentials Problem Set',
-          type: 'assignment',
-          duration: '1h 15m',
-          completed: false
         }
+        // {
+        //   id: 'l7',
+        //   title: 'Thermodynamic Potentials Problem Set',
+        //   type: 'assignment',
+        //   duration: '1h 15m',
+        //   completed: false
+        // }
       ]
     },
     {
@@ -2949,21 +2949,21 @@ export const coursesData: Record<string, Course> = {
           duration: '50m',
           completed: false,
           url: 'https://www.youtube.com/embed/A03b0yw7qvA'
-        },
-        {
-          id: 'l14',
-          title: 'Phase Equilibria Analysis',
-          type: 'assignment',
-          duration: '1h',
-          completed: false
-        },
-        {
-          id: 'l15',
-          title: 'Module Assessment: Phase Transitions',
-          type: 'quiz',
-          duration: '35m',
-          completed: false
         }
+        // {
+        //   id: 'l14',
+        //   title: 'Phase Equilibria Analysis',
+        //   type: 'assignment',
+        //   duration: '1h',
+        //   completed: false
+        // },
+        // {
+        //   id: 'l15',
+        //   title: 'Module Assessment: Phase Transitions',
+        //   type: 'quiz',
+        //   duration: '35m',
+        //   completed: false
+        // }
       ]
     },
     {
@@ -3020,18 +3020,18 @@ export const coursesData: Record<string, Course> = {
           completed: false,
           url: 'https://www.youtube.com/embed/6gXCBnQaUlw'
         },
-        {
-          id: 'l22',
-          title: 'Final Statistical Mechanics Project',
-          type: 'assignment',
-          duration: '1h 15m',
-          completed: false
-        },
+        // {
+        //   id: 'l22',
+        //   title: 'Final Statistical Mechanics Project',
+        //   type: 'assignment',
+        //   duration: '1h 15m',
+        //   completed: false
+        // },
         {
           id: 'l23',
-          title: 'Comprehensive Course Examination',
-          type: 'quiz',
-          duration: '40m',
+          title: 'Final Course Assessment',
+          type: 'assessment',
+          duration: '45m',
           completed: false
         }
       ]
@@ -3126,14 +3126,14 @@ export const coursesData: Record<string, Course> = {
           type: 'reading',
           duration: '55m',
           completed: false
-        },
-        {
-          id: 'l9',
-          title: 'Hamiltonian Mechanics Problem Set',
-          type: 'assignment',
-          duration: '2h',
-          completed: false
         }
+        // {
+        //   id: 'l9',
+        //   title: 'Hamiltonian Mechanics Problem Set',
+        //   type: 'assignment',
+        //   duration: '2h',
+        //   completed: false
+        // }
       ]
     },
     {
@@ -3197,14 +3197,14 @@ export const coursesData: Record<string, Course> = {
           duration: '55m',
           completed: false,
           url: 'https://www.youtube.com/embed/ycJEoqmQvwg'
-        },
-        {
-          id: 'l17',
-          title: 'Chaos Theory Analysis Project',
-          type: 'assignment',
-          duration: '2h',
-          completed: false
         }
+        // {
+        //   id: 'l17',
+        //   title: 'Chaos Theory Analysis Project',
+        //   type: 'assignment',
+        //   duration: '2h',
+        //   completed: false
+        // }
       ]
     },
     {
@@ -3261,18 +3261,18 @@ export const coursesData: Record<string, Course> = {
           completed: false,
           url: 'https://www.youtube.com/embed/URG5qpCAYnk'
         },
-        {
-          id: 'l24',
-          title: 'Final Comprehensive Research Project',
-          type: 'assignment',
-          duration: '2h 30m',
-          completed: false
-        },
+        // {
+        //   id: 'l24',
+        //   title: 'Final Comprehensive Research Project',
+        //   type: 'assignment',
+        //   duration: '2h 30m',
+        //   completed: false
+        // },
         {
           id: 'l25',
-          title: 'Advanced Classical Mechanics Examination',
-          type: 'quiz',
-          duration: '1h 30m',
+          title: 'Final Course Assessment',
+          type: 'assessment',
+          duration: '45m',
           completed: false
         }
       ]
@@ -3355,14 +3355,14 @@ export const coursesData: Record<string, Course> = {
           type: 'reading',
           duration: '55m',
           completed: false
-        },
-        {
-          id: 'l8',
-          title: 'Advanced Field Theory Problem Set',
-          type: 'assignment',
-          duration: '2h',
-          completed: false
         }
+        // {
+        //   id: 'l8',
+        //   title: 'Advanced Field Theory Problem Set',
+        //   type: 'assignment',
+        //   duration: '2h',
+        //   completed: false
+        // }
       ]
     },
     {
@@ -3426,14 +3426,14 @@ export const coursesData: Record<string, Course> = {
           duration: '55m',
           completed: false,
           url: 'https://www.youtube.com/embed/PQqqg3S_DBo'
-        },
-        {
-          id: 'l16',
-          title: 'Advanced Wave Dynamics Project',
-          type: 'assignment',
-          duration: '1h 30m',
-          completed: false
         }
+        // {
+        //   id: 'l16',
+        //   title: 'Advanced Wave Dynamics Project',
+        //   type: 'assignment',
+        //   duration: '1h 30m',
+        //   completed: false
+        // }
       ]
     },
     {
@@ -3497,18 +3497,18 @@ export const coursesData: Record<string, Course> = {
           duration: '60m',
           completed: false
         },
-        {
-          id: 'l24',
-          title: 'Final Theoretical Research Project',
-          type: 'assignment',
-          duration: '2h',
-          completed: false
-        },
+        // {
+        //   id: 'l24',
+        //   title: 'Final Theoretical Research Project',
+        //   type: 'assignment',
+        //   duration: '2h',
+        //   completed: false
+        // },
         {
           id: 'l25',
-          title: 'Comprehensive Examination',
-          type: 'quiz',
-          duration: '1h 30m',
+          title: 'Final Course Assessment',
+          type: 'assessment',
+          duration: '45m',
           completed: false
         }
       ]
@@ -3592,14 +3592,14 @@ export const coursesData: Record<string, Course> = {
           duration: '60m',
           completed: false,
           url: 'https://www.youtube.com/embed/C_3Wj5_GwJo'
-        },
-        {
-          id: 'l8',
-          title: 'Advanced Statistical Mechanics Problem Set',
-          type: 'assignment',
-          duration: '1h 45m',
-          completed: false
         }
+        // {
+        //   id: 'l8',
+        //   title: 'Advanced Statistical Mechanics Problem Set',
+        //   type: 'assignment',
+        //   duration: '1h 45m',
+        //   completed: false
+        // }
       ]
     },
     {
@@ -3663,14 +3663,14 @@ export const coursesData: Record<string, Course> = {
           duration: '55m',
           completed: false,
           url: 'https://www.youtube.com/embed/Ny1hKDpa8VM'
-        },
-        {
-          id: 'l16',
-          title: 'Phase Transitions Research Project',
-          type: 'assignment',
-          duration: '2h',
-          completed: false
         }
+        // {
+        //   id: 'l16',
+        //   title: 'Phase Transitions Research Project',
+        //   type: 'assignment',
+        //   duration: '2h',
+        //   completed: false
+        // }
       ]
     },
     {
@@ -3735,18 +3735,18 @@ export const coursesData: Record<string, Course> = {
           completed: false,
           url: 'https://www.youtube.com/embed/Myj8ul4ID2I'
         },
-        {
-          id: 'l24',
-          title: 'Final Research Project on Non-Equilibrium Systems',
-          type: 'assignment',
-          duration: '2h',
-          completed: false
-        },
+        // {
+        //   id: 'l24',
+        //   title: 'Final Research Project on Non-Equilibrium Systems',
+        //   type: 'assignment',
+        //   duration: '2h',
+        //   completed: false
+        // },
         {
           id: 'l25',
-          title: 'Comprehensive Final Examination',
-          type: 'quiz',
-          duration: '1h 30m',
+          title: 'Final Course Assessment',
+          type: 'assessment',
+          duration: '45m',
           completed: false
         }
       ]
