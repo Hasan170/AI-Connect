@@ -73,10 +73,10 @@ const Login = () => {
     }
   };
 
-  const handleGoogleLogin = () => {
-    // Implement Google OAuth login
-    console.log('Google login clicked');
-  };
+  // const handleGoogleLogin = () => {
+  //   // Implement Google OAuth login
+  //   console.log('Google login clicked');
+  // };
 
   return (
     <div className="pt-24 pb-16 px-6 bg-background min-h-screen flex flex-col items-center">
@@ -169,7 +169,7 @@ const Login = () => {
                 </button>
               </form>
 
-              <div className="text-center">
+              {/* <div className="text-center">
                 <p className="text-gray-600 mb-4">Or continue with</p>
                 <button 
                   onClick={handleGoogleLogin}
@@ -183,7 +183,7 @@ const Login = () => {
                   </svg>
                   Continue with Google
                 </button>
-              </div>
+              </div> */}
             </>
           )}
         </div>
