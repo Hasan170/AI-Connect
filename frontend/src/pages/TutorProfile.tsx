@@ -1,7 +1,46 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Edit, Star, Users, DollarSign, Clock, Book, X, LogOut, MessageSquare, Send } from 'lucide-react';
+import { Calendar, Edit, Star, Users, Clock, Book, X, LogOut, MessageSquare, Send, CreditCard } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
+
+// Add a Rupee icon component
+const RupeeIcon = ({ size = 24, className = "" }) => (
+  <svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    width={size} 
+    height={size} 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="2" 
+    strokeLinecap="round" 
+    strokeLinejoin="round" 
+    className={className}
+  >
+    <path d="M6 3h12M6 8h12M13 21l-3-13" />
+    <path d="M6 13h3c3 0 5-2 5-5" />
+  </svg>
+);
+
+// Add a Coin icon component
+const CoinIcon = ({ size = 24, className = "" }) => (
+  <svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    width={size} 
+    height={size} 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="2" 
+    strokeLinecap="round" 
+    strokeLinejoin="round" 
+    className={className}
+  >
+    <circle cx="12" cy="12" r="8" />
+    <path d="M9.5 9a2.5 2.5 0 0 1 5 0v6" />
+    <path d="M9.5 15a2.5 2.5 0 0 0 5 0" />
+  </svg>
+);
 
 interface ProfileData {
   name: string;
@@ -216,9 +255,9 @@ const TutorProfile = () => {
             <div className="flex justify-between items-center">
               <div>
                 <h1 className="text-3xl font-bold text-text-primary">Welcome back, {profileData.name}!</h1>
-                <p className="text-text-secondary mt-2">
+                {/* <p className="text-text-secondary mt-2">
                   Your next class starts in <span className="font-bold text-navbar">{formatTime(timeLeft)}</span>
-                </p>
+                </p> */}
               </div>
               <button 
                 onClick={handleLogout}
@@ -276,24 +315,21 @@ const TutorProfile = () => {
               </div>
             </div>
 
-            {/* Earnings Overview */}
+            {/* Earnings Overview - MODIFIED SECTION */}
             <div className="md:col-span-2 bg-white p-6 rounded-lg shadow-md transform hover:scale-[1.02] transition-all duration-300">
               <h2 className="text-xl font-semibold text-text-primary mb-6">Earnings Overview</h2>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 gap-4">
+                {/* Changed CoinIcon to CreditCard */}
                 <div className="p-4 bg-background rounded-lg transform hover:scale-[1.05] transition-all duration-300">
-                  <DollarSign className="text-navbar mb-2" size={24} />
+                  <CreditCard className="text-navbar mb-2" size={24} />
                   <p className="text-sm text-gray-500">Total Earnings</p>
-                  <p className="text-xl font-semibold text-text-primary">$2,500</p>
+                  <p className="text-xl font-semibold text-text-primary">₹7,200</p>
                 </div>
+                {/* Changed RupeeIcon to CreditCard */}
                 <div className="p-4 bg-background rounded-lg transform hover:scale-[1.05] transition-all duration-300">
-                  <Clock className="text-navbar mb-2" size={24} />
-                  <p className="text-sm text-gray-500">Hours this Month</p>
-                  <p className="text-xl font-semibold text-text-primary">45</p>
-                </div>
-                <div className="p-4 bg-background rounded-lg transform hover:scale-[1.05] transition-all duration-300">
-                  <DollarSign className="text-navbar mb-2" size={24} />
+                  <CreditCard className="text-navbar mb-2" size={24} />
                   <p className="text-sm text-gray-500">Pending Payout</p>
-                  <p className="text-xl font-semibold text-text-primary">$800</p>
+                  <p className="text-xl font-semibold text-text-primary">₹800</p>
                 </div>
               </div>
             </div>
