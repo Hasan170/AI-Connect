@@ -9,6 +9,7 @@ const classRoutes = require('./routes/classRoutes');
 const courseScoreRoutes = require('./routes/courseScoreRoutes');
 const resourceRoutes = require('./routes/resourceRoutes');
 const feedbackRoutes = require('./routes/feedbackRoutes'); 
+const adminRoutes = require('./routes/adminRoutes');
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.use('/api/courses/score', courseScoreRoutes);
 app.use('/api/resources', resourceRoutes);
 app.use('/api/feedback', feedbackRoutes);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/api/admin', adminRoutes);
 
 app.use(require('./middleware/errorHandler'));
 

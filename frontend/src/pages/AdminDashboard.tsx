@@ -69,19 +69,76 @@ const TimeSelectionModal: React.FC<TimeSelectionModalProps> = ({ isOpen, onClose
 
 
 export default function AdminDashboard() {
+  const [statsData, setStatsData] = useState({
+    tutors: 0,
+    students: 0,
+    activeClasses: 0
+  });
+  
+  const [loading, setLoading] = useState(true);
+  
+  // Use stats from state instead of hardcoded values
   const stats = [
-    { title: 'Total Users', value: '7', icon: <Users className="w-6 h-6" />,  bgColor: 'bg-blue-50' },
-    { title: 'Active Classes', value: '12', icon: <BookOpen className="w-6 h-6" />, bgColor: 'bg-green-50' },
-    { title: 'Revenue', value: '$1,500', icon: <DollarSign className="w-6 h-6" />, bgColor: 'bg-yellow-50' },
+    { title: 'Total Tutors', value: loading ? '...' : statsData.tutors.toString(), icon: <Users className="w-6 h-6" />,  bgColor: 'bg-blue-50' },
+    { title: 'Total Students', value: loading ? '...' : statsData.students.toString(), icon: <Users className="w-6 h-6" />, bgColor: 'bg-green-50' },
+    { title: 'Active Classes', value: loading ? '...' : statsData.activeClasses.toString(), icon: <BookOpen className="w-6 h-6" />, bgColor: 'bg-yellow-50' },
   ];
 
-  const [studentRequests, setStudentRequests] = useState<ClassRequest[]>([
-    { id: '1', name: 'John Doe', subject: 'Math', date: '2024-01-20', time: '10:00', status: 'pending' },
-  ]);
-
+  const [studentRequests, setStudentRequests] = useState<ClassRequest[]>([]);
   const [scheduledClasses, setScheduledClasses] = useState<ClassRequest[]>([]);
   const [isTimeModalOpen, setIsTimeModalOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<ClassRequest | null>(null);
+
+  // Add a new useEffect to fetch statistics
+  useEffect(() => {
+    const fetchStatistics = async () => {
+      // Inside the fetchStatistics function
+      try {
+        setLoading(true);
+        
+        // Make parallel requests for better performance
+        console.log('Fetching admin stats...');
+        const [tutorsRes, studentsRes, classesRes] = await Promise.all([
+          api.get('/admin/stats/tutors'),
+          api.get('/admin/stats/students'),
+          api.get('/admin/stats/active-classes')
+        ]);
+        
+        console.log('Tutors response:', tutorsRes.data);
+        console.log('Students response:', studentsRes.data);
+        console.log('Classes response:', classesRes.data);
+        
+        setStatsData({
+          tutors: tutorsRes.data.count || 0,
+          students: studentsRes.data.count || 0,
+          activeClasses: classesRes.data.count || 0
+        });
+        
+        console.log('Updated stats state:', {
+          tutors: tutorsRes.data.count || 0,
+          students: studentsRes.data.count || 0,
+          activeClasses: classesRes.data.count || 0
+        });
+      } catch (error) {
+        console.error('Error fetching statistics:', error);
+        // More detailed error logging
+        if (error.response) {
+          console.error('Error response:', error.response.data);
+          console.error('Error status:', error.response.status);
+        }
+        // Set fallback values in case of error
+        setStatsData({
+          tutors: 0,
+          students: 0,
+          activeClasses: 0
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchStatistics();
+  }, []); // Empty dependency array to run only once on component mount
 
   const approveStudent = (request: ClassRequest) => {
     setSelectedRequest(request);
